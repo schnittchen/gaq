@@ -1,5 +1,10 @@
-require "gaq/version"
+require 'gaq/version'
+
+require 'gaq/instance'
+require 'gaq/railtie'
 
 module Gaq
-  # Your code goes here...
+  def self.config
+    Railtie.config.gaq
+  end
 end
