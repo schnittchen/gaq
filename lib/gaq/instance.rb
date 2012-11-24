@@ -92,10 +92,10 @@ module Gaq
     private
 
     def gaq_instructions
-      [*static_quoted_gaq_items, *@early_instructions.quoted_gaq_items, *@instructions.quoted_gaq_items]
+      [*setup_quoted_gaq_items, *@early_instructions.quoted_gaq_items, *@instructions.quoted_gaq_items]
     end
 
-    def static_quoted_gaq_items
+    def setup_quoted_gaq_items
       [
         quoted_gaq_item('_setAccount', Gaq.config.web_property_id),
         quoted_gaq_item('_gat._anonymizeIp'),
