@@ -1,6 +1,8 @@
+require 'gaq/quoting'
+
 module Gaq
   class Instance
-    extend ActionView::Helpers::JavaScriptHelper
+    include Quoting
 
     FLASH_KEY = :analytics_instructions
 
@@ -9,6 +11,8 @@ module Gaq
     end
 
     class InstructionStack
+      include Quoting
+
       def self.both_from_flash(flash)
         early, normal = flash[FLASH_KEY] || [[], []]
         [new(early), new(normal)]
@@ -24,7 +28,7 @@ module Gaq
       end
 
       def push_with_args(args)
-        @stack << Instance.quoted_gaq_item(*args)
+        @stack << quoted_gaq_item(*args)
       end
 
       def quoted_gaq_items
@@ -87,21 +91,15 @@ module Gaq
 
     private
 
-    def self.quoted_gaq_item(*args)
-      arguments = args.map { |arg| "'#{j arg.to_s}'" }.join ', '
-      return "[#{arguments}]"
-    end
-
     def gaq_instructions
       [*static_quoted_gaq_items, *@early_instructions.quoted_gaq_items, *@instructions.quoted_gaq_items]
     end
 
     def static_quoted_gaq_items
-      cls = self.class
       [
-        cls.quoted_gaq_item('_setAccount', Gaq.config.web_property_id),
-        cls.quoted_gaq_item('_gat._anonymizeIp'),
-        cls.quoted_gaq_item('_trackPageview')
+        quoted_gaq_item('_setAccount', Gaq.config.web_property_id),
+        quoted_gaq_item('_gat._anonymizeIp'),
+        quoted_gaq_item('_trackPageview')
       ]
     end
 
