@@ -8,8 +8,8 @@ Gem::Specification.new do |gem|
   gem.version       = Gaq::VERSION
   gem.authors       = ["Thomas Stratmann"]
   gem.email         = ["thomas.stratmann@9elements.com"]
-  gem.description   = %q{TODO: Write a gem description}
-  gem.summary       = %q{TODO: Write a gem summary}
+  gem.description   = %q{Gaq is a lightweight gem for support of pushing static and dynamic data to the _gaq from the backend.}
+  gem.summary       = %q{Renders _gaq initialization and the ga.js snippet. Supports pushing from the back end}
   gem.homepage      = ""
 
   gem.files         = `git ls-files`.split($/)
