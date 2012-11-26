@@ -85,7 +85,14 @@ module Gaq
     end
 
     def js_finalizer
-      return '' unless Rails.env.production?
+      render_ga_js = evaluate_config Gaq.config.render_ga_js
+      case render_ga_js
+      when TrueClass, FalseClass
+      else
+        render_ga_js = Array(render_ga_js).map(&:to_s).include? Rails.env
+      end
+
+      return '' unless render_ga_js
       return <<EOJ
   (function() {
     var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;

@@ -19,6 +19,7 @@ module Gaq
       self.web_property_id = 'UA-XUNSET-S'
       self.track_pageview = true
       self.anonymize_ip = false
+      self.render_ga_js = :production
     end
 
     delegate :declare_variable, to: Variables
