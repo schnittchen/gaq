@@ -64,16 +64,24 @@ module Gaq
 
     private
 
+    def evaluate_config(value)
+      value = value.call(@controller) if value.respond_to? :call
+      return value
+    end
+
     def gaq_instructions
       [*setup_quoted_gaq_items, *@early_instructions.quoted_gaq_items, *@instructions.quoted_gaq_items]
     end
 
     def setup_quoted_gaq_items
-      [
-        quoted_gaq_item('_setAccount', Gaq.config.web_property_id),
-        quoted_gaq_item('_gat._anonymizeIp'),
-        quoted_gaq_item('_trackPageview')
+      config = Gaq.config
+
+      result = [
+        quoted_gaq_item('_setAccount', config.web_property_id)
       ]
+      result << quoted_gaq_item('_gat._anonymizeIp') if evaluate_config(config.anonymize_ip)
+      result << quoted_gaq_item('_trackPageview') if evaluate_config(config.track_pageview)
+      return result
     end
 
     def js_finalizer

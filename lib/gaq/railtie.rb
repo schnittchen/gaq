@@ -17,6 +17,8 @@ module Gaq
     def initialize
       super
       self.web_property_id = 'UA-XUNSET-S'
+      self.track_pageview = true
+      self.anonymize_ip = false
     end
 
     delegate :declare_variable, to: Variables
