@@ -77,7 +77,7 @@ module Gaq
       config = Gaq.config
 
       result = [
-        quoted_gaq_item('_setAccount', config.web_property_id)
+        quoted_gaq_item('_setAccount', evaluate_config(config.web_property_id))
       ]
       result << quoted_gaq_item('_gat._anonymizeIp') if evaluate_config(config.anonymize_ip)
       result << quoted_gaq_item('_trackPageview') if evaluate_config(config.track_pageview)
