@@ -14,8 +14,6 @@ module Gaq
   end
 
   class Options < ActiveSupport::OrderedOptions
-    attr_reader :foo
-
     def initialize
       super
       self.web_property_id = 'UA-XUNSET-S'
