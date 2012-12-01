@@ -51,7 +51,7 @@ Or install it yourself as:
 For inserting a track event to be rendered on the current request, do
 
 ```ruby
-gaq.push_track_event 'category', 'action', 'label'
+gaq.track_event 'category', 'action', 'label'
 ```
 
 If you have configured a custom variable like above, do this to set it:
@@ -64,7 +64,7 @@ If you need to do any of these before a redirect, use these methods on `gaq.next
 instead of `gaq`:
 
 ```ruby
-gaq.next_request.push_track_event 'category', 'action', 'label'
+gaq.next_request.track_event 'category', 'action', 'label'
 ```
 
 This feature uses the flash for storing _gaq items between requests.

@@ -12,7 +12,7 @@ module Gaq
     module DSL
       # expects InnerDSL to be present
 
-      def push_track_event(category, action, label = nil, value = nil, noninteraction = nil)
+      def track_event(category, action, label = nil, value = nil, noninteraction = nil)
         event = [category, action, label, value, noninteraction].compact
         instruction '_trackEvent', *event
       end
