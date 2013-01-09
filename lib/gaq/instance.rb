@@ -51,27 +51,40 @@ module Gaq
     include DSL
     include InnerDSL
 
-    def self.for_controller(controller)
-      new(controller)
+    class ConfigProxy
+      def initialize(config, controller)
+        @config, @controller = config, controller
+      end
+
+      def fetch(key)
+        value = @config.send(key)
+        value = value.call(@controller) if value.respond_to? :call
+        return value
+      end
     end
 
-    def initialize(controller)
-      @controller = controller
+    def self.for_controller(controller)
+      early_instructions, instructions = InstructionStack.both_from_flash controller.flash
+      config_proxy = ConfigProxy.new(Gaq.config, controller)
 
-      @early_instructions, @instructions = InstructionStack.both_from_flash controller.flash
+      new(early_instructions, instructions, controller.flash, config_proxy)
+    end
+
+    def initialize(early_instructions, instructions, flash, config_proxy)
+      @early_instructions, @instructions, @flash, @config_proxy =
+        early_instructions, instructions, flash, config_proxy
     end
 
     def next_request
       @next_request ||= NextRequestProxy.new do
-        InstructionStack.both_into_flash @controller.flash
+        InstructionStack.both_into_flash @flash
       end
     end
 
     private
 
-    def evaluate_config(value)
-      value = value.call(@controller) if value.respond_to? :call
-      return value
+    def fetch_config(key)
+      @config_proxy.fetch(key)
     end
 
     def gaq_instructions
@@ -79,18 +92,16 @@ module Gaq
     end
 
     def setup_quoted_gaq_items
-      config = Gaq.config
-
       result = [
-        quoted_gaq_item('_setAccount', evaluate_config(config.web_property_id))
+        quoted_gaq_item('_setAccount', fetch_config(:web_property_id))
       ]
-      result << quoted_gaq_item('_gat._anonymizeIp') if evaluate_config(config.anonymize_ip)
-      result << quoted_gaq_item('_trackPageview') if evaluate_config(config.track_pageview)
+      result << quoted_gaq_item('_gat._anonymizeIp') if fetch_config(:anonymize_ip)
+      result << quoted_gaq_item('_trackPageview') if fetch_config(:track_pageview)
       return result
     end
 
     def js_finalizer
-      render_ga_js = evaluate_config Gaq.config.render_ga_js
+      render_ga_js = fetch_config(:render_ga_js)
       case render_ga_js
       when TrueClass, FalseClass
       else
