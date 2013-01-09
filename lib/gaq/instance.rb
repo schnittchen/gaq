@@ -1,4 +1,5 @@
 require 'gaq/quoting'
+require 'gaq/variables'
 require 'gaq/instruction_stack'
 
 module Gaq
