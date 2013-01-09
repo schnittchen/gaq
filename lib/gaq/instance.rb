@@ -88,15 +88,15 @@ module Gaq
     end
 
     def gaq_instructions
-      [*setup_quoted_gaq_items, *@early_instructions.quoted_gaq_items, *@instructions.quoted_gaq_items]
+      [*setup_gaq_items, *@early_instructions, *@instructions]
     end
 
-    def setup_quoted_gaq_items
+    def setup_gaq_items
       result = [
-        quoted_gaq_item('_setAccount', fetch_config(:web_property_id))
+        ['_setAccount', fetch_config(:web_property_id)]
       ]
-      result << quoted_gaq_item('_gat._anonymizeIp') if fetch_config(:anonymize_ip)
-      result << quoted_gaq_item('_trackPageview') if fetch_config(:track_pageview)
+      result << ['_gat._anonymizeIp'] if fetch_config(:anonymize_ip)
+      result << ['_trackPageview'] if fetch_config(:track_pageview)
       return result
     end
 
@@ -121,9 +121,13 @@ EOJ
     public
 
     def render(context)
+      quoted_gaq_items = gaq_instructions.map do |instruction_ary|
+        quoted_gaq_item(*instruction_ary)
+      end
+
       js_content_lines = [
         'var _gaq = _gaq || [];',
-        "_gaq.push(#{gaq_instructions.join(",\n  ")});"
+        "_gaq.push(#{quoted_gaq_items.join(",\n  ")});"
       ]
 
       js_content = js_content_lines.join("\n") + "\n" + js_finalizer

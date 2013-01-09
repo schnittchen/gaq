@@ -31,7 +31,7 @@ module Gaq
     end
 
     def be_empty_gaq_instructions
-      be_eql ["['_setAccount', '']"]
+      be_eql [["_setAccount", nil]]
     end
 
     context "initially" do
@@ -51,7 +51,7 @@ module Gaq
         flash.should be_empty
 
         subject.gaq_instructions.should \
-          be_eql(["['_setAccount', '']", "['_trackEvent', 'category', 'action', 'label']"])
+          be_eql([["_setAccount", nil], ["_trackEvent", "category", "action", "label"]])
       end
     end
 
@@ -61,7 +61,7 @@ module Gaq
       end
 
       it 'renders properly' do
-        flash.should be_eql({:analytics_instructions=>[[], ["['_trackEvent', 'category', 'action', 'label']"]]})
+        flash.should be_eql({:analytics_instructions=>[[], [["_trackEvent", "category", "action", "label"]]]})
 
         subject.gaq_instructions.should be_empty_gaq_instructions
       end
@@ -89,7 +89,7 @@ module Gaq
           flash.should be_empty
 
           subject.gaq_instructions.should \
-            be_eql(["['_setAccount', '']", "['_setCustomVar', '0', 'var', 'blah', '3']"])
+            be_eql([["_setAccount", nil], ["_setCustomVar", 0, :var, "blah", 3]])
         end
 
         context "with track_event" do
@@ -101,7 +101,7 @@ module Gaq
             flash.should be_empty
 
             subject.gaq_instructions.should \
-              be_eql(["['_setAccount', '']", "['_setCustomVar', '0', 'var', 'blah', '3']", "['_trackEvent', 'category', 'action', 'label']"])
+              be_eql([["_setAccount", nil], ["_setCustomVar", 0, :var, "blah", 3], ["_trackEvent", "category", "action", "label"]])
           end
         end
 
@@ -111,10 +111,10 @@ module Gaq
           end
 
           it 'renders properly' do
-            flash.should be_eql({:analytics_instructions=>[[], ["['_trackEvent', 'category', 'action', 'label']"]]})
+            flash.should be_eql({:analytics_instructions=>[[], [["_trackEvent", "category", "action", "label"]]]})
 
             subject.gaq_instructions.should \
-              be_eql(["['_setAccount', '']", "['_setCustomVar', '0', 'var', 'blah', '3']"])
+              be_eql([["_setAccount", nil], ["_setCustomVar", 0, :var, "blah", 3]])
           end
         end
       end

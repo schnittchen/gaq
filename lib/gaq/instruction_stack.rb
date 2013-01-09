@@ -2,8 +2,6 @@ require 'gaq/quoting'
 
 module Gaq
   class InstructionStack
-    include Quoting
-
     FLASH_KEY = :analytics_instructions
 
     def self.both_from_flash(flash)
@@ -21,10 +19,10 @@ module Gaq
     end
 
     def push_with_args(args)
-      @stack << quoted_gaq_item(*args)
+      @stack << args
     end
 
-    def quoted_gaq_items
+    def to_a
       @stack
     end
   end
