@@ -3,10 +3,9 @@ require 'gaq/instance'
 module Gaq
   describe Instance do
     let(:flash) { {} }
-    let(:controller) do
-      double("controller").tap do |cont|
-        cont.stub(:flash) { flash }
-      end
+
+    let(:both_instructions) do
+      InstructionStack.both_from_flash flash
     end
 
     let(:config) do
@@ -24,7 +23,9 @@ module Gaq
 
     subject do
       Instance.finalize
-      described_class.new(controller).tap do |sub|
+
+      config_proxy = Instance::ConfigProxy.new(config, nil) # controller not needed here
+      described_class.new(*both_instructions, flash, config_proxy).tap do |sub|
         sub.singleton_class.send :public, :gaq_instructions
       end
     end
