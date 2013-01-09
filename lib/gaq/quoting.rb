@@ -1,3 +1,5 @@
+require 'action_view'
+
 module Gaq
   module Quoting
     include ActionView::Helpers::JavaScriptHelper
