@@ -9,7 +9,7 @@ module Gaq
 
   module ControllerMethods
     def gaq
-      @_gaq ||= Instance.new(self)
+      @_gaq ||= Instance.for_controller(self)
     end
   end
 

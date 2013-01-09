@@ -51,6 +51,10 @@ module Gaq
     include DSL
     include InnerDSL
 
+    def self.for_controller(controller)
+      new(controller)
+    end
+
     def initialize(controller)
       @controller = controller
 
