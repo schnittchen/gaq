@@ -1,12 +1,9 @@
-require 'gaq/quoting'
 require 'gaq/variables'
 require 'gaq/instruction_stack_pair'
 require 'gaq/renderer'
 
 module Gaq
   class Instance
-    include Quoting
-
     def self.finalize
       DSL.finalize
     end

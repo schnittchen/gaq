@@ -1,8 +1,5 @@
-require 'gaq/quoting'
-
 module Gaq
   class Renderer
-    include Quoting
 
     SNIPPET = <<EOJ
 (function() {
@@ -19,7 +16,7 @@ EOJ
 
     def render(calculated_instructions)
       quoted_instructions = calculated_instructions.map do |instruction|
-        quoted_gaq_item(*instruction)
+        quote_instruction(instruction)
       end
 
       js_content_lines = [
@@ -30,6 +27,13 @@ EOJ
       js_content = js_content_lines.join("\n")
       js_content << "\n\n" << SNIPPET if @will_render_ga_js
       @context.javascript_tag js_content
+    end
+
+    private
+
+    def quote_instruction(instruction)
+      quoted_segments = instruction.map { |segment| "'#{@context.j segment.to_s}'" }.join ', '
+      return "[#{quoted_segments}]"
     end
 
     class << self
