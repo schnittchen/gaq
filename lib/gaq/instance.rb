@@ -1,53 +1,25 @@
 require 'gaq/variables'
 require 'gaq/instruction_stack_pair'
 require 'gaq/renderer'
+require 'gaq/tracker'
 
 module Gaq
   class Instance
     def self.finalize
-      DSL.finalize
-    end
+      include Tracker.methods_module
 
-    module DSL
-      # expects InnerDSL to be present
-
-      def track_event(category, action, label = nil, value = nil, noninteraction = nil)
-        event = [category, action, label, value, noninteraction].compact
-        instruction '_trackEvent', *event
-      end
-
-      def self.finalize
-        Variables.cleaned_up.each do |v|
-          define_method "#{v[:name]}=" do |value|
-            early_instruction '_setCustomVar', v[:slot], v[:name], value, v[:scope]
-          end
-        end
-      end
-    end
-
-    module InnerDSL
-      private
-
-      def early_instruction(*args)
-        @instructions_pair.early.push args
-      end
-
-      def instruction(*args)
-        @instructions_pair.push args
-      end
+      NextRequestProxy.finalize
     end
 
     class NextRequestProxy
-      include DSL
-      include InnerDSL
+      def self.finalize
+        include Tracker.methods_module
+      end
 
       def initialize
-        @instructions_pair = yield
+        @instructions_stack_pair = yield
       end
     end
-
-    include DSL
-    include InnerDSL
 
     class ConfigProxy
       def initialize(config, controller)
@@ -69,7 +41,7 @@ module Gaq
     end
 
     def initialize(instruction_stack_pair, promise, flash, config_proxy)
-      @instructions_pair, @promise , @flash, @config_proxy =
+      @instructions_stack_pair, @promise , @flash, @config_proxy =
         instruction_stack_pair, promise, flash, config_proxy
     end
 
@@ -84,7 +56,7 @@ module Gaq
     end
 
     def gaq_instructions
-      [*setup_gaq_items, *@instructions_pair.early, *@instructions_pair.to_a]
+      [*setup_gaq_items, *@instructions_stack_pair.early, *@instructions_stack_pair.to_a]
     end
 
     def setup_gaq_items
