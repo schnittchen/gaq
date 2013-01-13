@@ -65,7 +65,7 @@ module Gaq
     end
 
     def self.for_controller(controller)
-      instruction_stack_pair, promise = InstructionStackPair.pair_and_next_request_promise(flash)
+      instruction_stack_pair, promise = InstructionStackPair.pair_and_next_request_promise(controller.flash)
       config_proxy = ConfigProxy.new(Gaq.config, controller)
 
       new(instruction_stack_pair, promise, controller.flash, config_proxy)
