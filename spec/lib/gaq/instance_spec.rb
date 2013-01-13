@@ -4,8 +4,12 @@ module Gaq
   describe Instance do
     let(:flash) { {} }
 
-    let(:both_instructions) do
-      InstructionStack.both_from_flash flash
+    let(:pair_and_promise) do
+      InstructionStackPair.pair_and_next_request_promise(flash)
+    end
+
+    let(:instruction_stack_pair) do
+      pair_and_promise.first
     end
 
     let(:config) do
@@ -21,11 +25,15 @@ module Gaq
       Gaq::Variables.stub(:cleaned_up) { variables }
     end
 
+    let(:next_request_pair_promise) do
+      pair_and_promise.last
+    end
+
     subject do
       Instance.finalize
 
       config_proxy = Instance::ConfigProxy.new(config, nil) # controller not needed here
-      described_class.new(*both_instructions, flash, config_proxy).tap do |sub|
+      described_class.new(instruction_stack_pair, next_request_pair_promise, flash, config_proxy).tap do |sub|
         sub.singleton_class.send :public, :gaq_instructions
       end
     end

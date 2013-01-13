@@ -1,6 +1,6 @@
 require 'gaq/quoting'
 require 'gaq/variables'
-require 'gaq/instruction_stack'
+require 'gaq/instruction_stack_pair'
 
 module Gaq
   class Instance
@@ -31,11 +31,11 @@ module Gaq
       private
 
       def early_instruction(*args)
-        @early_instructions.push_with_args args
+        @instructions_pair.early.push args
       end
 
       def instruction(*args)
-        @instructions.push_with_args args
+        @instructions_pair.push args
       end
     end
 
@@ -44,7 +44,7 @@ module Gaq
       include InnerDSL
 
       def initialize
-        @early_instructions, @instructions = yield
+        @instructions_pair = yield
       end
     end
 
@@ -64,21 +64,19 @@ module Gaq
     end
 
     def self.for_controller(controller)
-      early_instructions, instructions = InstructionStack.both_from_flash controller.flash
+      instruction_stack_pair, promise = InstructionStackPair.pair_and_next_request_promise(flash)
       config_proxy = ConfigProxy.new(Gaq.config, controller)
 
-      new(early_instructions, instructions, controller.flash, config_proxy)
+      new(instruction_stack_pair, promise, controller.flash, config_proxy)
     end
 
-    def initialize(early_instructions, instructions, flash, config_proxy)
-      @early_instructions, @instructions, @flash, @config_proxy =
-        early_instructions, instructions, flash, config_proxy
+    def initialize(instruction_stack_pair, promise, flash, config_proxy)
+      @instructions_pair, @promise , @flash, @config_proxy =
+        instruction_stack_pair, promise, flash, config_proxy
     end
 
     def next_request
-      @next_request ||= NextRequestProxy.new do
-        InstructionStack.both_into_flash @flash
-      end
+      @next_request ||= NextRequestProxy.new(&@promise)
     end
 
     private
@@ -88,7 +86,7 @@ module Gaq
     end
 
     def gaq_instructions
-      [*setup_gaq_items, *@early_instructions, *@instructions]
+      [*setup_gaq_items, *@instructions_pair.early, *@instructions_pair.to_a]
     end
 
     def setup_gaq_items
