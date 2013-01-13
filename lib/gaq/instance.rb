@@ -99,34 +99,13 @@ module Gaq
       return result
     end
 
-    def js_finalizer
-      render_ga_js = fetch_config(:render_ga_js)
-      render_ga_js = Renderer.interpret_render_ga_js_config(render_ga_js)
-
-      return '' unless render_ga_js
-      return <<EOJ
-  (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(ga);
-  })();
-EOJ
-    end
-
     public
 
     def render(context)
-      quoted_gaq_items = gaq_instructions.map do |instruction_ary|
-        quoted_gaq_item(*instruction_ary)
-      end
+      render_ga_js = fetch_config(:render_ga_js)
+      render_ga_js = Renderer.interpret_render_ga_js_config(render_ga_js, Rails.env)
 
-      js_content_lines = [
-        'var _gaq = _gaq || [];',
-        "_gaq.push(#{quoted_gaq_items.join(",\n  ")});"
-      ]
-
-      js_content = js_content_lines.join("\n") + "\n" + js_finalizer
-      context.javascript_tag js_content
+      Renderer.new(context, render_ga_js).render(gaq_instructions)
     end
   end
 end
