@@ -13,7 +13,9 @@ module Gaq
     end
 
     let(:config) do
-      OpenStruct.new
+      OpenStruct.new.tap do |cfg|
+        cfg.web_property_id = 'UA-XXTESTYY-1'
+      end
     end
 
     let(:variables) do
@@ -40,7 +42,7 @@ module Gaq
     end
 
     def be_empty_gaq_instructions
-      be_eql [["_setAccount", nil]]
+      be_eql [["_setAccount", 'UA-XXTESTYY-1']]
     end
 
     context "initially" do
@@ -60,7 +62,7 @@ module Gaq
         flash.should be_empty
 
         subject.gaq_instructions.should \
-          be_eql([["_setAccount", nil], ["_trackEvent", "category", "action", "label"]])
+          be_eql([["_setAccount", 'UA-XXTESTYY-1'], ["_trackEvent", "category", "action", "label"]])
       end
     end
 
@@ -98,7 +100,7 @@ module Gaq
           flash.should be_empty
 
           subject.gaq_instructions.should \
-            be_eql([["_setAccount", nil], ["_setCustomVar", 0, :var, "blah", 3]])
+            be_eql([["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3]])
         end
 
         context "with track_event" do
@@ -110,7 +112,7 @@ module Gaq
             flash.should be_empty
 
             subject.gaq_instructions.should \
-              be_eql([["_setAccount", nil], ["_setCustomVar", 0, :var, "blah", 3], ["_trackEvent", "category", "action", "label"]])
+              be_eql([["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3], ["_trackEvent", "category", "action", "label"]])
           end
         end
 
@@ -123,7 +125,7 @@ module Gaq
             flash.should be_eql({:analytics_instructions=>[[], [["_trackEvent", "category", "action", "label"]]]})
 
             subject.gaq_instructions.should \
-              be_eql([["_setAccount", nil], ["_setCustomVar", 0, :var, "blah", 3]])
+              be_eql([["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3]])
           end
         end
 
@@ -149,7 +151,7 @@ module Gaq
       let(:flash) { flash_from_last_request }
 
       def be_gaq_instructions_from_previous_request
-        be_eql [["_setAccount", nil], ["_setCustomVar", 0, :var, "blah", 3], ["_trackEvent", "last_cat", "last_action", "last_label"]]
+        be_eql [["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3], ["_trackEvent", "last_cat", "last_action", "last_label"]]
       end
 
       it 'renders properly' do
@@ -166,7 +168,7 @@ module Gaq
           flash.should be_equal(flash_from_last_request)
 
           subject.gaq_instructions.should \
-            be_eql([["_setAccount", nil], ["_setCustomVar", 0, :var, "blah", 3], ["_trackEvent", "last_cat", "last_action", "last_label"], ["_trackEvent", "category", "action", "label"]])
+            be_eql([["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3], ["_trackEvent", "last_cat", "last_action", "last_label"], ["_trackEvent", "category", "action", "label"]])
         end
       end
 
@@ -204,7 +206,7 @@ module Gaq
             flash.should be_equal(flash_from_last_request)
 
             subject.gaq_instructions.should \
-              be_eql([["_setAccount", nil], ["_setCustomVar", 0, :var, "blah", 3], ["_setCustomVar", 0, :var, "blubb", 3], ["_trackEvent", "last_cat", "last_action", "last_label"]])
+              be_eql([["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3], ["_setCustomVar", 0, :var, "blubb", 3], ["_trackEvent", "last_cat", "last_action", "last_label"]])
           end
 
           context "with track_event" do
@@ -218,7 +220,7 @@ module Gaq
               flash.should be_eql({:analytics_instructions=>[[["_setCustomVar", 0, :var, "blah", 3], ["_setCustomVar", 0, :var, "blubb", 3]], [["_trackEvent", "last_cat", "last_action", "last_label"], ["_trackEvent", "category", "action", "label"]]]})
 
               subject.gaq_instructions.should \
-                be_eql([["_setAccount", nil], ["_setCustomVar", 0, :var, "blah", 3], ["_setCustomVar", 0, :var, "blubb", 3], ["_trackEvent", "last_cat", "last_action", "last_label"], ["_trackEvent", "category", "action", "label"]])
+                be_eql([["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3], ["_setCustomVar", 0, :var, "blubb", 3], ["_trackEvent", "last_cat", "last_action", "last_label"], ["_trackEvent", "category", "action", "label"]])
             end
           end
 
@@ -231,7 +233,7 @@ module Gaq
               flash.should be_eql({:analytics_instructions=>[[], [["_trackEvent", "category", "action", "label"]]]})
 
               subject.gaq_instructions.should \
-                be_eql([["_setAccount", nil], ["_setCustomVar", 0, :var, "blah", 3], ["_setCustomVar", 0, :var, "blubb", 3], ["_trackEvent", "last_cat", "last_action", "last_label"]])
+                be_eql([["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3], ["_setCustomVar", 0, :var, "blubb", 3], ["_trackEvent", "last_cat", "last_action", "last_label"]])
             end
           end
         end
