@@ -1,6 +1,7 @@
 require 'gaq/quoting'
 require 'gaq/variables'
 require 'gaq/instruction_stack_pair'
+require 'gaq/renderer'
 
 module Gaq
   class Instance
@@ -100,11 +101,7 @@ module Gaq
 
     def js_finalizer
       render_ga_js = fetch_config(:render_ga_js)
-      case render_ga_js
-      when TrueClass, FalseClass
-      else
-        render_ga_js = Array(render_ga_js).map(&:to_s).include? Rails.env
-      end
+      render_ga_js = Renderer.interpret_render_ga_js_config(render_ga_js)
 
       return '' unless render_ga_js
       return <<EOJ
