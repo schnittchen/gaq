@@ -8,7 +8,7 @@ module Gaq
   class Instance
     def self.finalize
       Target.finalize
-      delegate *Target.target_methods, to: :@default_target
+      delegate(*Target.target_methods, to: :@default_target)
     end
 
     class ConfigProxy
@@ -16,8 +16,8 @@ module Gaq
         @config, @controller = config, controller
       end
 
-      def fetch(key)
-        value = @config.send(key)
+      def fetch(key, config_object = @config)
+        value = config_object.send(key)
         value = value.call(@controller) if value.respond_to? :call
         return value
       end
@@ -48,9 +48,7 @@ module Gaq
     end
 
     def setup_gaq_items
-      result = [
-        ['_setAccount', fetch_config(:web_property_id)]
-      ]
+      result = Tracker.setup_instructions(@config_proxy)
       result << ['_gat._anonymizeIp'] if fetch_config(:anonymize_ip)
       result << ['_trackPageview'] if fetch_config(:track_pageview)
       return result

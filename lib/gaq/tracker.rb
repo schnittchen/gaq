@@ -13,7 +13,41 @@ module Gaq
       [@tracker_command_prefix + cmd_name, *args]
     end
 
+    class Options < ActiveSupport::OrderedOptions
+      def initialize
+        super
+        self.web_property_id = 'UA-XUNSET-S'
+      end
+    end
+
     class << self
+      def pre_setup
+        @tracker_data = { nil => Options.new }
+      end
+
+      def setup_for_additional_tracker_names(*tracker_names)
+        tracker_names.map(&:to_s).each_with_object(@tracker_data) do |tracker_name, data|
+          data[tracker_name] = Options.new
+        end
+      end
+
+      def tracker_config(tracker_name)
+        @tracker_data[tracker_name.to_s]
+      end
+
+      def default_tracker_config
+        @tracker_data[nil]
+      end
+
+      def setup_instructions(config_proxy)
+        @tracker_data.map do |tracker_name, options|
+          web_property_id = config_proxy.fetch(:web_property_id, options)
+          command = '_setAccount'
+          command.prepend "#{tracker_name}." if tracker_name
+          [command, web_property_id]
+        end
+      end
+
       def methods_module
         @methods_module ||= clone.module_eval do
           Variables.cleaned_up.each do |v|
@@ -31,5 +65,7 @@ module Gaq
         @methods_module = nil
       end
     end
+
+    pre_setup
   end
 end
