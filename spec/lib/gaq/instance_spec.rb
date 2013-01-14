@@ -14,7 +14,8 @@ module Gaq
 
     let(:config) do
       OpenStruct.new.tap do |cfg|
-        cfg.web_property_id = 'UA-XXTESTYY-1'
+        Tracker.default_tracker_config.web_property_id = 'UA-XXTESTYY-1'
+        # cfg.web_property_id = 'UA-XXTESTYY-1'
       end
     end
 

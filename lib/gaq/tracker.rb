@@ -1,3 +1,5 @@
+require 'active_support/ordered_options'
+
 module Gaq
   module Tracker
     ## expects a @instruction_stack_pair and a @tracker_command_prefix
