@@ -6,8 +6,10 @@ module Gaq
     end
 
     def tracker(tracker_name)
-      @origin.target_from_characteristics(@characteristics, :tracker, tracker_name)
+      @origin.target_from_characteristics(@characteristics, :tracker, tracker_name.to_s)
     end
+
+    alias_method :[], :tracker
 
     def next_request
       @origin.target_from_characteristics(@characteristics, :next_request)
