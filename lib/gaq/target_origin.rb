@@ -17,8 +17,8 @@ module Gaq
 
     def target_from_characteristics(base, dsl_method, *args)
       characteristics = case dsl_method
-      # when :tracker
-      #   characterize_with_base(args.first, nil, base)
+      when :tracker
+        characterize_with_base(args.first, nil, base)
       when :next_request
         characterize_with_base(nil, true, base)
       end
@@ -29,6 +29,7 @@ module Gaq
     private
 
     def create_target(characteristics)
+      tracker_name = characteristics.first
       is_for_next_request = characteristics[1]
 
       if is_for_next_request
@@ -37,17 +38,18 @@ module Gaq
         instruction_stack_pair = @instruction_stack_pair
       end
 
-      Target.new(self, characteristics, instruction_stack_pair)
+      command_prefix = tracker_name ? "#{tracker_name}." : ''
+      Target.new(self, characteristics, instruction_stack_pair, command_prefix)
     end
 
-    def characterize_with_base(target_name, is_for_next_request, base)
-      target_name ||= base.first
+    def characterize_with_base(tracker_name, is_for_next_request, base)
+      tracker_name ||= base.first
       is_for_next_request = base[1] if is_for_next_request.nil?
-      characterize(target_name, is_for_next_request)
+      characterize(tracker_name, is_for_next_request)
     end
 
-    def characterize(target_name, is_for_next_request)
-      [target_name, is_for_next_request]
+    def characterize(tracker_name, is_for_next_request)
+      [tracker_name, is_for_next_request]
     end
   end
 end

@@ -1,8 +1,8 @@
 module Gaq
   class Target
-    def initialize(origin, characteristics, instruction_stack_pair)
-      @origin, @characteristics, @instruction_stack_pair =
-        origin, characteristics, instruction_stack_pair
+    def initialize(origin, characteristics, instruction_stack_pair, command_prefix = '')
+      @origin, @characteristics, @instruction_stack_pair, @tracker_command_prefix =
+        origin, characteristics, instruction_stack_pair, command_prefix
     end
 
     def tracker(tracker_name)
