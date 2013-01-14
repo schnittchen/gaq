@@ -2,23 +2,13 @@ require 'gaq/variables'
 require 'gaq/instruction_stack_pair'
 require 'gaq/renderer'
 require 'gaq/tracker'
+require 'gaq/target_origin'
 
 module Gaq
   class Instance
     def self.finalize
-      include Tracker.methods_module
-
-      NextRequestProxy.finalize
-    end
-
-    class NextRequestProxy
-      def self.finalize
-        include Tracker.methods_module
-      end
-
-      def initialize
-        @instructions_stack_pair = yield
-      end
+      Target.finalize
+      delegate *Target.target_methods, to: :@default_target
     end
 
     class ConfigProxy
@@ -37,16 +27,13 @@ module Gaq
       instruction_stack_pair, promise = InstructionStackPair.pair_and_next_request_promise(controller.flash)
       config_proxy = ConfigProxy.new(Gaq.config, controller)
 
-      new(instruction_stack_pair, promise, controller.flash, config_proxy)
+      target_origin = TargetOrigin.new(instruction_stack_pair, promise)
+      new(target_origin, config_proxy)
     end
 
-    def initialize(instruction_stack_pair, promise, flash, config_proxy)
-      @instructions_stack_pair, @promise , @flash, @config_proxy =
-        instruction_stack_pair, promise, flash, config_proxy
-    end
-
-    def next_request
-      @next_request ||= NextRequestProxy.new(&@promise)
+    def initialize(target_origin, config_proxy)
+      @target_origin, @config_proxy = target_origin, config_proxy
+      @default_target = @target_origin.default_target
     end
 
     private
@@ -56,7 +43,8 @@ module Gaq
     end
 
     def gaq_instructions
-      [*setup_gaq_items, *@instructions_stack_pair.early, *@instructions_stack_pair.to_a]
+      instruction_stack_pair = @target_origin.instruction_stack_pair
+      [*setup_gaq_items, *instruction_stack_pair.early, *instruction_stack_pair.to_a]
     end
 
     def setup_gaq_items

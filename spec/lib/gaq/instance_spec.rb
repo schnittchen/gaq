@@ -36,7 +36,9 @@ module Gaq
       Instance.finalize
 
       config_proxy = Instance::ConfigProxy.new(config, nil) # controller not needed here
-      described_class.new(instruction_stack_pair, next_request_pair_promise, flash, config_proxy).tap do |sub|
+      target_origin = TargetOrigin.new(instruction_stack_pair, next_request_pair_promise)
+
+      described_class.new(target_origin, config_proxy).tap do |sub|
         sub.singleton_class.send :public, :gaq_instructions
       end
     end
