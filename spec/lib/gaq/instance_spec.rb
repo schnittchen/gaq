@@ -241,6 +241,24 @@ module Gaq
           end
         end
       end
+
+      context "with a custom tracker" do
+        before(:each) do
+          subject[:foo].track_event 'category', 'action', 'label'
+        end
+
+        it 'renders properly' do
+          flash.should be_equal(flash_from_last_request)
+
+          subject.gaq_instructions.should \
+            be == [
+              ["_setAccount", 'UA-XXTESTYY-1'],
+              ["_setCustomVar", 0, :var, "blah", 3],
+              ["_trackEvent", "last_cat", "last_action", "last_label"],
+              ["foo._trackEvent", "category", "action", "label"]
+            ]
+        end
+      end
     end
   end
 end
