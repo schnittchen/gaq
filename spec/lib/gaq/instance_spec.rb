@@ -45,7 +45,7 @@ module Gaq
     end
 
     def be_empty_gaq_instructions
-      be_eql [["_setAccount", 'UA-XXTESTYY-1']]
+      be == [["_setAccount", 'UA-XXTESTYY-1']]
     end
 
     context "initially" do
@@ -65,7 +65,7 @@ module Gaq
         flash.should be_empty
 
         subject.gaq_instructions.should \
-          be_eql([["_setAccount", 'UA-XXTESTYY-1'], ["_trackEvent", "category", "action", "label"]])
+          be ==([["_setAccount", 'UA-XXTESTYY-1'], ["_trackEvent", "category", "action", "label"]])
       end
     end
 
@@ -75,7 +75,7 @@ module Gaq
       end
 
       it 'renders properly' do
-        flash.should be_eql({:analytics_instructions=>[[], [["_trackEvent", "category", "action", "label"]]]})
+        flash.should be ==({:analytics_instructions=>[[], [["_trackEvent", "category", "action", "label"]]]})
 
         subject.gaq_instructions.should be_empty_gaq_instructions
       end
@@ -103,7 +103,7 @@ module Gaq
           flash.should be_empty
 
           subject.gaq_instructions.should \
-            be_eql([["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3]])
+            be ==([["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3]])
         end
 
         context "with track_event" do
@@ -115,7 +115,7 @@ module Gaq
             flash.should be_empty
 
             subject.gaq_instructions.should \
-              be_eql([["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3], ["_trackEvent", "category", "action", "label"]])
+              be ==([["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3], ["_trackEvent", "category", "action", "label"]])
           end
         end
 
@@ -125,10 +125,10 @@ module Gaq
           end
 
           it 'renders properly' do
-            flash.should be_eql({:analytics_instructions=>[[], [["_trackEvent", "category", "action", "label"]]]})
+            flash.should be ==({:analytics_instructions=>[[], [["_trackEvent", "category", "action", "label"]]]})
 
             subject.gaq_instructions.should \
-              be_eql([["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3]])
+              be ==([["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3]])
           end
         end
 
@@ -140,7 +140,7 @@ module Gaq
 
           it 'has data on the flash we are interested in' do
             expected_flash = {:analytics_instructions=>[[["_setCustomVar", 0, :var, "blah", 3]], [["_trackEvent", "category", "action", "label"]]]}
-            flash.should be_eql(expected_flash)
+            flash.should be ==(expected_flash)
           end
         end
       end
@@ -154,7 +154,7 @@ module Gaq
       let(:flash) { flash_from_last_request }
 
       def be_gaq_instructions_from_previous_request
-        be_eql [["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3], ["_trackEvent", "last_cat", "last_action", "last_label"]]
+        be == [["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3], ["_trackEvent", "last_cat", "last_action", "last_label"]]
       end
 
       it 'renders properly' do
@@ -171,7 +171,7 @@ module Gaq
           flash.should be_equal(flash_from_last_request)
 
           subject.gaq_instructions.should \
-            be_eql([["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3], ["_trackEvent", "last_cat", "last_action", "last_label"], ["_trackEvent", "category", "action", "label"]])
+            be ==([["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3], ["_trackEvent", "last_cat", "last_action", "last_label"], ["_trackEvent", "category", "action", "label"]])
         end
       end
 
@@ -181,7 +181,7 @@ module Gaq
         end
 
         it 'renders properly' do
-          flash.should be_eql({:analytics_instructions=>[[], [["_trackEvent", "category", "action", "label"]]]})
+          flash.should be ==({:analytics_instructions=>[[], [["_trackEvent", "category", "action", "label"]]]})
 
           subject.gaq_instructions.should be_gaq_instructions_from_previous_request
         end
@@ -209,7 +209,7 @@ module Gaq
             flash.should be_equal(flash_from_last_request)
 
             subject.gaq_instructions.should \
-              be_eql([["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3], ["_setCustomVar", 0, :var, "blubb", 3], ["_trackEvent", "last_cat", "last_action", "last_label"]])
+              be ==([["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3], ["_setCustomVar", 0, :var, "blubb", 3], ["_trackEvent", "last_cat", "last_action", "last_label"]])
           end
 
           context "with track_event" do
@@ -220,10 +220,10 @@ module Gaq
             it 'renders properly' do
               # flash.should be_empty
               # FIXME documenting behaviour here that is probably wrong (double check if needed)
-              flash.should be_eql({:analytics_instructions=>[[["_setCustomVar", 0, :var, "blah", 3], ["_setCustomVar", 0, :var, "blubb", 3]], [["_trackEvent", "last_cat", "last_action", "last_label"], ["_trackEvent", "category", "action", "label"]]]})
+              flash.should be ==({:analytics_instructions=>[[["_setCustomVar", 0, :var, "blah", 3], ["_setCustomVar", 0, :var, "blubb", 3]], [["_trackEvent", "last_cat", "last_action", "last_label"], ["_trackEvent", "category", "action", "label"]]]})
 
               subject.gaq_instructions.should \
-                be_eql([["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3], ["_setCustomVar", 0, :var, "blubb", 3], ["_trackEvent", "last_cat", "last_action", "last_label"], ["_trackEvent", "category", "action", "label"]])
+                be ==([["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3], ["_setCustomVar", 0, :var, "blubb", 3], ["_trackEvent", "last_cat", "last_action", "last_label"], ["_trackEvent", "category", "action", "label"]])
             end
           end
 
@@ -233,10 +233,10 @@ module Gaq
             end
 
             it 'renders properly' do
-              flash.should be_eql({:analytics_instructions=>[[], [["_trackEvent", "category", "action", "label"]]]})
+              flash.should be ==({:analytics_instructions=>[[], [["_trackEvent", "category", "action", "label"]]]})
 
               subject.gaq_instructions.should \
-                be_eql([["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3], ["_setCustomVar", 0, :var, "blubb", 3], ["_trackEvent", "last_cat", "last_action", "last_label"]])
+                be ==([["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3], ["_setCustomVar", 0, :var, "blubb", 3], ["_trackEvent", "last_cat", "last_action", "last_label"]])
             end
           end
         end
