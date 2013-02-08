@@ -1,12 +1,17 @@
 require 'active_support/ordered_options'
 
+require 'gaq/instruction/track_event'
+
 module Gaq
   module Tracker
     ## expects a @instruction_stack_pair and a @tracker_command_prefix
+    ## and we now also want a @tracker_name
 
     def track_event(category, action, label = nil, value = nil, noninteraction = nil)
       event = [category, action, label, value, noninteraction].compact
-      @instruction_stack_pair.push tracker_command('_trackEvent', *event)
+      instruction = Instruction::TrackEvent.new event
+      instruction.for_tracker @tracker_name
+      @instruction_stack_pair.push instruction
     end
 
     private

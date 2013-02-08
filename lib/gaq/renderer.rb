@@ -32,7 +32,11 @@ EOJ
     private
 
     def quote_instruction(instruction)
-      quoted_segments = instruction.map { |segment| "'#{@context.j segment.to_s}'" }.join ', '
+      if instruction.is_a? Instruction::Base
+        quoted_segments = instruction.full_array_of_json_objects.join(', ')
+      else
+        quoted_segments = instruction.map { |segment| "'#{@context.j segment.to_s}'" }.join ', '
+      end
       return "[#{quoted_segments}]"
     end
 

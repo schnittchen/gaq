@@ -38,8 +38,7 @@ module Gaq
         instruction_stack_pair = @instruction_stack_pair
       end
 
-      command_prefix = tracker_name ? "#{tracker_name}." : ''
-      Target.new(self, characteristics, instruction_stack_pair, command_prefix)
+      Target.new(self, characteristics, instruction_stack_pair, tracker_name)
     end
 
     def characterize_with_base(tracker_name, is_for_next_request, base)
