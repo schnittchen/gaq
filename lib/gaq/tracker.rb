@@ -5,12 +5,8 @@ require 'gaq/instruction/set_custom_var'
 
 module Gaq
   class Tracker
-    ## expects a @instruction_stack_pair and a @tracker_command_prefix
-    ## and we now also want a @tracker_name
-
-    def initialize(instruction_stack_pair, tracker_command_prefix, tracker_name)
-      @instruction_stack_pair, @tracker_command_prefix, @tracker_name =
-        instruction_stack_pair, tracker_command_prefix, tracker_name
+    def initialize(name, instruction_stack_pair)
+      @instruction_stack_pair, @tracker_name = instruction_stack_pair, name
       extend self.class.methods_module
     end
 
@@ -22,10 +18,6 @@ module Gaq
     end
 
     private
-
-    def tracker_command(cmd_name, *args)
-      [@tracker_command_prefix + cmd_name, *args]
-    end
 
     class Options < ActiveSupport::OrderedOptions
       def initialize
