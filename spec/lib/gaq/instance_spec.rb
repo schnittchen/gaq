@@ -160,7 +160,7 @@ module Gaq
           subject.gaq_instructions.should \
             be ==([["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3]])
 
-          rendered.should be == %{<script type=\"text/javascript\">\n//<![CDATA[\nvar _gaq = _gaq || [];\n_gaq.push(['_setAccount', 'UA-XXTESTYY-1'],\n  ['_setCustomVar', '0', 'var', 'blah', '3']);\n//]]>\n</script>}
+          rendered.should be == %{<script type=\"text/javascript\">\n//<![CDATA[\nvar _gaq = _gaq || [];\n_gaq.push(['_setAccount', 'UA-XXTESTYY-1'],\n  [\"_setCustomVar\", 0, \"var\", \"blah\", 3]);\n//]]>\n</script>}
         end
 
         context "with track_event" do
@@ -174,7 +174,7 @@ module Gaq
             subject.gaq_instructions.should \
               be ==([["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3], ["_trackEvent", "category", "action", "label"]])
 
-            rendered.should be == %{<script type=\"text/javascript\">\n//<![CDATA[\nvar _gaq = _gaq || [];\n_gaq.push(['_setAccount', 'UA-XXTESTYY-1'],\n  ['_setCustomVar', '0', 'var', 'blah', '3'],\n  [\"_trackEvent\", \"category\", \"action\", \"label\"]);\n//]]>\n</script>}
+            rendered.should be == %{<script type=\"text/javascript\">\n//<![CDATA[\nvar _gaq = _gaq || [];\n_gaq.push(['_setAccount', 'UA-XXTESTYY-1'],\n  [\"_setCustomVar\", 0, \"var\", \"blah\", 3],\n  [\"_trackEvent\", \"category\", \"action\", \"label\"]);\n//]]>\n</script>}
           end
         end
 
@@ -189,7 +189,7 @@ module Gaq
             subject.gaq_instructions.should \
               be ==([["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3]])
 
-            rendered.should be == %{<script type=\"text/javascript\">\n//<![CDATA[\nvar _gaq = _gaq || [];\n_gaq.push(['_setAccount', 'UA-XXTESTYY-1'],\n  ['_setCustomVar', '0', 'var', 'blah', '3']);\n//]]>\n</script>}
+            rendered.should be == %{<script type=\"text/javascript\">\n//<![CDATA[\nvar _gaq = _gaq || [];\n_gaq.push(['_setAccount', 'UA-XXTESTYY-1'],\n  [\"_setCustomVar\", 0, \"var\", \"blah\", 3]);\n//]]>\n</script>}
           end
         end
 
@@ -203,7 +203,7 @@ module Gaq
             expected_flash = {:analytics_instructions=>[[["_setCustomVar", 0, :var, "blah", 3]], [["_trackEvent", "category", "action", "label"]]]}
             flash.should be ==(expected_flash)
 
-            rendered.should == %{<script type=\"text/javascript\">\n//<![CDATA[\nvar _gaq = _gaq || [];\n_gaq.push(['_setAccount', 'UA-XXTESTYY-1'],\n  ['_setCustomVar', '0', 'var', 'blah', '3']);\n//]]>\n</script>}
+            rendered.should == %{<script type=\"text/javascript\">\n//<![CDATA[\nvar _gaq = _gaq || [];\n_gaq.push(['_setAccount', 'UA-XXTESTYY-1'],\n  [\"_setCustomVar\", 0, \"var\", \"blah\", 3]);\n//]]>\n</script>}
           end
         end
       end
@@ -282,7 +282,7 @@ module Gaq
             subject.gaq_instructions.should \
               be ==([["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3], ["_setCustomVar", 0, :var, "blubb", 3], ["_trackEvent", "last_cat", "last_action", "last_label"]])
 
-            rendered.should be == %{<script type=\"text/javascript\">\n//<![CDATA[\nvar _gaq = _gaq || [];\n_gaq.push(['_setAccount', 'UA-XXTESTYY-1'],\n  ['_setCustomVar', '0', 'var', 'blah', '3'],\n  ['_setCustomVar', '0', 'var', 'blubb', '3'],\n  ['_trackEvent', 'last_cat', 'last_action', 'last_label']);\n//]]>\n</script>}
+            rendered.should be == %{<script type=\"text/javascript\">\n//<![CDATA[\nvar _gaq = _gaq || [];\n_gaq.push(['_setAccount', 'UA-XXTESTYY-1'],\n  ['_setCustomVar', '0', 'var', 'blah', '3'],\n  [\"_setCustomVar\", 0, \"var\", \"blubb\", 3],\n  ['_trackEvent', 'last_cat', 'last_action', 'last_label']);\n//]]>\n</script>}
           end
 
           context "with track_event" do
@@ -298,7 +298,7 @@ module Gaq
               subject.gaq_instructions.should \
                 be ==([["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3], ["_setCustomVar", 0, :var, "blubb", 3], ["_trackEvent", "last_cat", "last_action", "last_label"], ["_trackEvent", "category", "action", "label"]])
 
-              rendered.should be == %{<script type=\"text/javascript\">\n//<![CDATA[\nvar _gaq = _gaq || [];\n_gaq.push(['_setAccount', 'UA-XXTESTYY-1'],\n  ['_setCustomVar', '0', 'var', 'blah', '3'],\n  ['_setCustomVar', '0', 'var', 'blubb', '3'],\n  ['_trackEvent', 'last_cat', 'last_action', 'last_label'],\n  [\"_trackEvent\", \"category\", \"action\", \"label\"]);\n//]]>\n</script>}
+              rendered.should be == %{<script type=\"text/javascript\">\n//<![CDATA[\nvar _gaq = _gaq || [];\n_gaq.push(['_setAccount', 'UA-XXTESTYY-1'],\n  ['_setCustomVar', '0', 'var', 'blah', '3'],\n  [\"_setCustomVar\", 0, \"var\", \"blubb\", 3],\n  ['_trackEvent', 'last_cat', 'last_action', 'last_label'],\n  [\"_trackEvent\", \"category\", \"action\", \"label\"]);\n//]]>\n</script>}
             end
           end
 
@@ -313,7 +313,7 @@ module Gaq
               subject.gaq_instructions.should \
                 be ==([["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3], ["_setCustomVar", 0, :var, "blubb", 3], ["_trackEvent", "last_cat", "last_action", "last_label"]])
 
-              rendered.should be == %{<script type=\"text/javascript\">\n//<![CDATA[\nvar _gaq = _gaq || [];\n_gaq.push(['_setAccount', 'UA-XXTESTYY-1'],\n  ['_setCustomVar', '0', 'var', 'blah', '3'],\n  ['_setCustomVar', '0', 'var', 'blubb', '3'],\n  ['_trackEvent', 'last_cat', 'last_action', 'last_label']);\n//]]>\n</script>}
+              rendered.should be == %{<script type=\"text/javascript\">\n//<![CDATA[\nvar _gaq = _gaq || [];\n_gaq.push(['_setAccount', 'UA-XXTESTYY-1'],\n  ['_setCustomVar', '0', 'var', 'blah', '3'],\n  [\"_setCustomVar\", 0, \"var\", \"blubb\", 3],\n  ['_trackEvent', 'last_cat', 'last_action', 'last_label']);\n//]]>\n</script>}
             end
           end
         end

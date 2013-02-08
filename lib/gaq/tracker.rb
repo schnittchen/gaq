@@ -1,6 +1,7 @@
 require 'active_support/ordered_options'
 
 require 'gaq/instruction/track_event'
+require 'gaq/instruction/set_custom_var'
 
 module Gaq
   module Tracker
@@ -59,7 +60,8 @@ module Gaq
         @methods_module ||= clone.module_eval do
           Variables.cleaned_up.each do |v|
             define_method "#{v[:name]}=" do |value|
-              @instruction_stack_pair.early.push tracker_command('_setCustomVar', v[:slot], v[:name], value, v[:scope])
+              instruction = Instruction::SetCustomVar.new [v[:slot], v[:name], value, v[:scope]]
+              @instruction_stack_pair.early.push instruction
             end
           end
 
