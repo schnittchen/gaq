@@ -4,9 +4,15 @@ require 'gaq/instruction/track_event'
 require 'gaq/instruction/set_custom_var'
 
 module Gaq
-  module Tracker
+  class Tracker
     ## expects a @instruction_stack_pair and a @tracker_command_prefix
     ## and we now also want a @tracker_name
+
+    def initialize(instruction_stack_pair, tracker_command_prefix, tracker_name)
+      @instruction_stack_pair, @tracker_command_prefix, @tracker_name =
+        instruction_stack_pair, tracker_command_prefix, tracker_name
+      extend self.class.methods_module
+    end
 
     def track_event(category, action, label = nil, value = nil, noninteraction = nil)
       event = [category, action, label, value, noninteraction].compact
@@ -39,6 +45,10 @@ module Gaq
         end
       end
 
+      def tracker_methods
+        [*public_instance_methods(false), *Tracker.methods_module.public_instance_methods(false)]
+      end
+
       def tracker_config(tracker_name)
         @tracker_data[tracker_name.to_s]
       end
@@ -57,7 +67,7 @@ module Gaq
       end
 
       def methods_module
-        @methods_module ||= clone.module_eval do
+        @methods_module ||= Module.new.module_eval do
           Variables.cleaned_up.each do |v|
             define_method "#{v[:name]}=" do |value|
               instruction = Instruction::SetCustomVar.new [v[:slot], v[:name], value, v[:scope]]

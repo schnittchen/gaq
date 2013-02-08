@@ -4,6 +4,8 @@ module Gaq
       @origin, @characteristics, @instruction_stack_pair, @tracker_name =
         origin, characteristics, instruction_stack_pair, tracker_name
       @tracker_command_prefix = tracker_name ? "#{tracker_name}." : ''
+
+      @our_tracker = Tracker.new(@instruction_stack_pair, @tracker_command_prefix, @tracker_name)
     end
 
     def tracker(tracker_name)
@@ -18,11 +20,11 @@ module Gaq
 
     class << self
       def finalize
-        include Tracker.methods_module
+        delegate(*Tracker.tracker_methods, to: :@our_tracker)
       end
 
       def target_methods
-        public_instance_methods(false) + Tracker.methods_module.instance_methods
+        public_instance_methods(false)
       end
     end
   end
