@@ -44,6 +44,53 @@ module Gaq
       end
     end
 
+    def rendered
+      context = Class.new do
+
+        # stolen from actionview
+        def j(javascript)
+          js_escape_map = { '\\' => '\\\\', '</' => '<\/', "\r\n" => '\n', "\n" => '\n', "\r" => '\n', '"' => '\\"', "'" => "\\'" }
+          if javascript
+            result = javascript.gsub(/(\\|<\/|\r\n|\342\200\250|[\n\r"'])/u) {|match| js_escape_map[match] }
+            # javascript.html_safe? ? result.html_safe : result
+            result
+          else
+            ''
+          end
+        end
+
+        def javascript_tag(content)
+          content_tag(:script, javascript_cdata_section(content)) #html_options.merge(:type => Mime::JS))
+        end
+
+        private
+
+        def h(content)
+          content #is already safe
+          # content.encode(content.encoding, :xml => :attr)[1...-1]
+        end
+
+        def content_tag_string(name, content)
+          tag_options = ' type="text/javascript"'
+          "<#{name}#{tag_options}>#{h(content)}</#{name}>"
+        end
+
+        def content_tag(name, content)
+          content_tag_string(name, content)
+        end
+
+        def javascript_cdata_section(content)
+          "\n//#{cdata_section("\n#{content}\n//")}\n"
+        end
+
+        def cdata_section(content)
+          "<![CDATA[#{content}]]>"
+        end
+      end.new
+
+      subject.render(context)
+    end
+
     def be_empty_gaq_instructions
       be == [["_setAccount", 'UA-XXTESTYY-1']]
     end
