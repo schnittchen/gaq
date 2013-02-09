@@ -1,3 +1,5 @@
+require 'gaq/instruction/base'
+
 module Gaq
   module Instruction
     class SetAccount < Base
