@@ -8,7 +8,7 @@ module Gaq
   class Tracker
     def initialize(name, instruction_stack_pair)
       @instruction_stack_pair, @tracker_name = instruction_stack_pair, name
-      extend self.class.methods_module
+      extend self.class.variable_methods
     end
 
     def track_event(category, action, label = nil, value = nil, noninteraction = nil)
@@ -39,7 +39,7 @@ module Gaq
       end
 
       def tracker_methods
-        [*public_instance_methods(false), *Tracker.methods_module.public_instance_methods(false)]
+        [*public_instance_methods(false), *Tracker.variable_methods.public_instance_methods(false)]
       end
 
       def tracker_config(tracker_name)
@@ -57,8 +57,8 @@ module Gaq
         end
       end
 
-      def methods_module
-        @methods_module ||= Module.new.module_eval do
+      def variable_methods
+        @variable_methods ||= Module.new.module_eval do
           Variables.cleaned_up.each do |v|
             define_method "#{v[:name]}=" do |value|
               instruction = Instruction::SetCustomVar.new [v[:slot], v[:name], value, v[:scope]]
@@ -71,8 +71,8 @@ module Gaq
       end
 
       # happy testing!
-      def reset_methods_module
-        @methods_module = nil
+      def reset_variable_methods
+        @variable_methods = nil
       end
     end
 

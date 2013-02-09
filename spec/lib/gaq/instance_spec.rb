@@ -33,7 +33,7 @@ module Gaq
     end
 
     subject do
-      Tracker.reset_methods_module
+      Tracker.reset_variable_methods
       Instance.finalize
 
       config_proxy = Instance::ConfigProxy.new(config, nil) # controller not needed here
