@@ -1,5 +1,6 @@
 require 'active_support/ordered_options'
 
+require 'gaq/instruction/set_account'
 require 'gaq/instruction/track_event'
 require 'gaq/instruction/set_custom_var'
 
@@ -52,9 +53,7 @@ module Gaq
       def setup_instructions(config_proxy)
         @tracker_data.map do |tracker_name, options|
           web_property_id = config_proxy.fetch(:web_property_id, options)
-          command = '_setAccount'
-          command.prepend "#{tracker_name}." if tracker_name
-          [command, web_property_id]
+          Instruction::SetAccount.new [web_property_id]
         end
       end
 
