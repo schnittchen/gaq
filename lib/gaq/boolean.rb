@@ -1,7 +1,7 @@
 module Gaq
   class Boolean
-    def initialize(boolish)
-      @value = !!boolish
+    def initialize(bool)
+      @value = bool
     end
 
     def to_json

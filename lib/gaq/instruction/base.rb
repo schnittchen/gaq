@@ -12,7 +12,9 @@ module Gaq
       attr_reader :tracker_name
 
       def initialize(params)
-        @params = params
+        @params = params.zip(get_signature.take(params.length)).map do |param, type|
+          InstructionParamType.coerce(param, type)
+        end
       end
 
       def for_tracker(tracker_name)
@@ -26,10 +28,8 @@ module Gaq
         end
       end
 
-      def full_array_of_json_objects
-        first = [@tracker_name, get_tracker_method].compact.join('.')
-        first = InstructionParamType.jsonify(first, String)
-        [first, *json_parameters]
+      def to_json
+        "[#{[full_first_array_item, *json_parameters].join(', ')}]"
       end
 
       def position_slot
@@ -37,6 +37,10 @@ module Gaq
       end
 
       private
+
+      def full_first_array_item
+        InstructionParamType.jsonify([@tracker_name, get_tracker_method].compact.join('.'), String)
+      end
 
       delegate :get_tracker_method, :get_signature, to: 'self.class'
 
