@@ -12,11 +12,22 @@ module Gaq
 
     FLASH_KEY = :analytics_instructions #TODO change this
 
+    class FlashArray < Array
+      def push(instruction)
+        super(instruction.serialize)
+      end
+    end
+
     class << self
       def pair_and_next_request_promise(flash)
-        pair = new(*flash[FLASH_KEY])
+        args = (flash[FLASH_KEY] || []).map do |array|
+          (array || []).map do |item|
+            Instruction::Base.deserialize(item)
+          end
+        end
+        pair = new(*args)
         promise = -> do
-          flash[FLASH_KEY] = [[], []]
+          flash[FLASH_KEY] = [FlashArray.new, FlashArray.new]
           new(*flash[FLASH_KEY])
         end
 

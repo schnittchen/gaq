@@ -36,10 +36,18 @@ module Gaq
         POS_IDENTS.index(position_ident)
       end
 
+      def serialize
+        [full_first_word, *@params]
+      end
+
       private
 
+      def full_first_word
+        [@tracker_name, get_tracker_method].compact.join('.')
+      end
+
       def full_first_array_item
-        InstructionParamType.jsonify([@tracker_name, get_tracker_method].compact.join('.'), String)
+        InstructionParamType.jsonify(full_first_word, String)
       end
 
       delegate :get_tracker_method, :get_signature, to: 'self.class'
@@ -67,6 +75,24 @@ module Gaq
 
         def get_tracker_method
           @tracker_method
+        end
+
+        # flash deserialization
+
+        def deserialize(item)
+          tracker_method = item.first.split('.').last
+          instruction_class_for_tracker_method(tracker_method).new item[1..-1]
+        end
+
+        # utility
+
+        def instruction_class_for_tracker_method(tracker_method)
+          @subclasses.find { |cls| cls.get_tracker_method == tracker_method }
+        end
+
+        def inherited(subclass)
+          @subclasses ||= []
+          @subclasses << subclass
         end
       end
     end
