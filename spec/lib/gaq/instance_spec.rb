@@ -91,15 +91,15 @@ module Gaq
       subject.render(context)
     end
 
-    def be_empty_gaq_instructions
-      be == [["_setAccount", 'UA-XXTESTYY-1']]
+    def base_tracker_setup_instructions
+      [Instruction::SetAccount.new(['UA-XXTESTYY-1'])]
     end
 
     context "initially" do
       it 'renders properly' do
         flash.should be_empty
 
-        subject.gaq_instructions.should be_empty_gaq_instructions
+        subject.gaq_instructions.should be == base_tracker_setup_instructions
 
         rendered.should be == %{<script type=\"text/javascript\">\n//<![CDATA[\nvar _gaq = _gaq || [];\n_gaq.push([\"_setAccount\", \"UA-XXTESTYY-1\"]);\n//]]>\n</script>}
       end
@@ -113,8 +113,9 @@ module Gaq
       it 'renders properly' do
         flash.should be_empty
 
+        track_event_instruction = Instruction::TrackEvent.new ["category", "action", "label"]
         subject.gaq_instructions.should \
-          be ==([["_setAccount", 'UA-XXTESTYY-1'], ["_trackEvent", "category", "action", "label"]])
+          be ==([*base_tracker_setup_instructions, track_event_instruction])
 
         rendered.should be == %{<script type=\"text/javascript\">\n//<![CDATA[\nvar _gaq = _gaq || [];\n_gaq.push([\"_setAccount\", \"UA-XXTESTYY-1\"],\n  [\"_trackEvent\", \"category\", \"action\", \"label\"]);\n//]]>\n</script>}
       end
@@ -128,7 +129,7 @@ module Gaq
       it 'renders properly' do
         flash.should be ==({:analytics_instructions=>[[], [["_trackEvent", "category", "action", "label"]]]})
 
-        subject.gaq_instructions.should be_empty_gaq_instructions
+        subject.gaq_instructions.should be == base_tracker_setup_instructions
 
         rendered.should be == %{<script type=\"text/javascript\">\n//<![CDATA[\nvar _gaq = _gaq || [];\n_gaq.push([\"_setAccount\", \"UA-XXTESTYY-1\"]);\n//]]>\n</script>}
       end
@@ -143,7 +144,7 @@ module Gaq
         it 'renders properly' do
           flash.should be_empty
 
-          subject.gaq_instructions.should be_empty_gaq_instructions
+          subject.gaq_instructions.should be == base_tracker_setup_instructions
 
           rendered.should be == %{<script type=\"text/javascript\">\n//<![CDATA[\nvar _gaq = _gaq || [];\n_gaq.push([\"_setAccount\", \"UA-XXTESTYY-1\"]);\n//]]>\n</script>}
         end
@@ -154,11 +155,15 @@ module Gaq
           subject.var = 'blah'
         end
 
+        let(:custom_var_instruction) do
+          Instruction::SetCustomVar.new [0, "var", "blah", 3]
+        end
+
         it "renders properly" do
           flash.should be_empty
 
           subject.gaq_instructions.should \
-            be ==([["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3]])
+            be ==([*base_tracker_setup_instructions, custom_var_instruction])
 
           rendered.should be == %{<script type=\"text/javascript\">\n//<![CDATA[\nvar _gaq = _gaq || [];\n_gaq.push([\"_setAccount\", \"UA-XXTESTYY-1\"],\n  [\"_setCustomVar\", 0, \"var\", \"blah\", 3]);\n//]]>\n</script>}
         end
@@ -171,8 +176,9 @@ module Gaq
           it 'renders properly' do
             flash.should be_empty
 
+            track_event_instruction = Instruction::TrackEvent.new ["category", "action", "label"]
             subject.gaq_instructions.should \
-              be ==([["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3], ["_trackEvent", "category", "action", "label"]])
+              be ==([*base_tracker_setup_instructions, custom_var_instruction, track_event_instruction])
 
             rendered.should be == %{<script type=\"text/javascript\">\n//<![CDATA[\nvar _gaq = _gaq || [];\n_gaq.push([\"_setAccount\", \"UA-XXTESTYY-1\"],\n  [\"_setCustomVar\", 0, \"var\", \"blah\", 3],\n  [\"_trackEvent\", \"category\", \"action\", \"label\"]);\n//]]>\n</script>}
           end
@@ -187,7 +193,7 @@ module Gaq
             flash.should be ==({:analytics_instructions=>[[], [["_trackEvent", "category", "action", "label"]]]})
 
             subject.gaq_instructions.should \
-              be ==([["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3]])
+              be ==([*base_tracker_setup_instructions, custom_var_instruction])
 
             rendered.should be == %{<script type=\"text/javascript\">\n//<![CDATA[\nvar _gaq = _gaq || [];\n_gaq.push([\"_setAccount\", \"UA-XXTESTYY-1\"],\n  [\"_setCustomVar\", 0, \"var\", \"blah\", 3]);\n//]]>\n</script>}
           end
@@ -220,8 +226,16 @@ module Gaq
         be == [["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3], ["_trackEvent", "last_cat", "last_action", "last_label"]]
       end
 
+      def instructions_from_previous_request
+        [
+          *base_tracker_setup_instructions,
+          Instruction::SetCustomVar.new([0, "var", "blah", 3]),
+          Instruction::TrackEvent.new(["last_cat", "last_action", "last_label"])
+        ]
+      end
+
       it 'renders properly' do
-        subject.gaq_instructions.should be_gaq_instructions_from_previous_request
+        subject.gaq_instructions.should be == instructions_from_previous_request
         flash.should be_equal(flash_from_last_request)
 
         rendered.should be == %{<script type=\"text/javascript\">\n//<![CDATA[\nvar _gaq = _gaq || [];\n_gaq.push([\"_setAccount\", \"UA-XXTESTYY-1\"],\n  [\"_setCustomVar\", 0, \"var\", \"blah\", 3],\n  [\"_trackEvent\", \"last_cat\", \"last_action\", \"last_label\"]);\n//]]>\n</script>}
@@ -235,8 +249,9 @@ module Gaq
         it 'renders properly' do
           flash.should be_equal(flash_from_last_request)
 
+          track_event = Instruction::TrackEvent.new ["category", "action", "label"]
           subject.gaq_instructions.should \
-            be ==([["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3], ["_trackEvent", "last_cat", "last_action", "last_label"], ["_trackEvent", "category", "action", "label"]])
+            be ==([*instructions_from_previous_request, track_event])
 
           rendered.should be == %{<script type=\"text/javascript\">\n//<![CDATA[\nvar _gaq = _gaq || [];\n_gaq.push([\"_setAccount\", \"UA-XXTESTYY-1\"],\n  [\"_setCustomVar\", 0, \"var\", \"blah\", 3],\n  [\"_trackEvent\", \"last_cat\", \"last_action\", \"last_label\"],\n  [\"_trackEvent\", \"category\", \"action\", \"label\"]);\n//]]>\n</script>}
         end
@@ -250,7 +265,7 @@ module Gaq
         it 'renders properly' do
           flash.should be ==({:analytics_instructions=>[[], [["_trackEvent", "category", "action", "label"]]]})
 
-          subject.gaq_instructions.should be_gaq_instructions_from_previous_request
+          subject.gaq_instructions.should be == instructions_from_previous_request
 
           rendered.should be == %{<script type=\"text/javascript\">\n//<![CDATA[\nvar _gaq = _gaq || [];\n_gaq.push([\"_setAccount\", \"UA-XXTESTYY-1\"],\n  [\"_setCustomVar\", 0, \"var\", \"blah\", 3],\n  [\"_trackEvent\", \"last_cat\", \"last_action\", \"last_label\"]);\n//]]>\n</script>}
         end
@@ -265,7 +280,7 @@ module Gaq
           it 'renders properly' do
             flash.should be_equal(flash_from_last_request)
 
-            subject.gaq_instructions.should be_gaq_instructions_from_previous_request
+            subject.gaq_instructions.should be == instructions_from_previous_request
 
             rendered.should be == %{<script type=\"text/javascript\">\n//<![CDATA[\nvar _gaq = _gaq || [];\n_gaq.push([\"_setAccount\", \"UA-XXTESTYY-1\"],\n  [\"_setCustomVar\", 0, \"var\", \"blah\", 3],\n  [\"_trackEvent\", \"last_cat\", \"last_action\", \"last_label\"]);\n//]]>\n</script>}
           end
@@ -276,11 +291,15 @@ module Gaq
             subject.var = 'blubb'
           end
 
+          let(:custom_var_instruction) do
+            Instruction::SetCustomVar.new [0, "var", "blubb", 3]
+          end
+
           it "renders properly" do
             flash.should be_equal(flash_from_last_request)
 
             subject.gaq_instructions.should \
-              be ==([["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3], ["_setCustomVar", 0, :var, "blubb", 3], ["_trackEvent", "last_cat", "last_action", "last_label"]])
+              be ==([*instructions_from_previous_request[0..1], custom_var_instruction, instructions_from_previous_request[2]])
 
             rendered.should be == %{<script type=\"text/javascript\">\n//<![CDATA[\nvar _gaq = _gaq || [];\n_gaq.push([\"_setAccount\", \"UA-XXTESTYY-1\"],\n  [\"_setCustomVar\", 0, \"var\", \"blah\", 3],\n  [\"_setCustomVar\", 0, \"var\", \"blubb\", 3],\n  [\"_trackEvent\", \"last_cat\", \"last_action\", \"last_label\"]);\n//]]>\n</script>}
           end
@@ -293,10 +312,12 @@ module Gaq
             it 'renders properly' do
               # flash.should be_empty
               # FIXME documenting behaviour here that is probably wrong (double check if needed)
-              flash.should be ==({:analytics_instructions=>[[["_setCustomVar", 0, :var, "blah", 3], ["_setCustomVar", 0, :var, "blubb", 3]], [["_trackEvent", "last_cat", "last_action", "last_label"], ["_trackEvent", "category", "action", "label"]]]})
+              # flash.should be ==({:analytics_instructions=>[[["_setCustomVar", 0, :var, "blah", 3], ["_setCustomVar", 0, :var, "blubb", 3]], [["_trackEvent", "last_cat", "last_action", "last_label"], ["_trackEvent", "category", "action", "label"]]]})
+
+              track_event_instruction = Instruction::TrackEvent.new ["category", "action", "label"]
 
               subject.gaq_instructions.should \
-                be ==([["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3], ["_setCustomVar", 0, :var, "blubb", 3], ["_trackEvent", "last_cat", "last_action", "last_label"], ["_trackEvent", "category", "action", "label"]])
+                be ==([*instructions_from_previous_request[0..1], custom_var_instruction, instructions_from_previous_request[2], track_event_instruction])
 
               rendered.should be == %{<script type=\"text/javascript\">\n//<![CDATA[\nvar _gaq = _gaq || [];\n_gaq.push([\"_setAccount\", \"UA-XXTESTYY-1\"],\n  [\"_setCustomVar\", 0, \"var\", \"blah\", 3],\n  [\"_setCustomVar\", 0, \"var\", \"blubb\", 3],\n  [\"_trackEvent\", \"last_cat\", \"last_action\", \"last_label\"],\n  [\"_trackEvent\", \"category\", \"action\", \"label\"]);\n//]]>\n</script>}
             end
@@ -311,7 +332,7 @@ module Gaq
               flash.should be ==({:analytics_instructions=>[[], [["_trackEvent", "category", "action", "label"]]]})
 
               subject.gaq_instructions.should \
-                be ==([["_setAccount", 'UA-XXTESTYY-1'], ["_setCustomVar", 0, :var, "blah", 3], ["_setCustomVar", 0, :var, "blubb", 3], ["_trackEvent", "last_cat", "last_action", "last_label"]])
+                be ==([*instructions_from_previous_request[0..1], custom_var_instruction, instructions_from_previous_request[2]])
 
               rendered.should be == %{<script type=\"text/javascript\">\n//<![CDATA[\nvar _gaq = _gaq || [];\n_gaq.push([\"_setAccount\", \"UA-XXTESTYY-1\"],\n  [\"_setCustomVar\", 0, \"var\", \"blah\", 3],\n  [\"_setCustomVar\", 0, \"var\", \"blubb\", 3],\n  [\"_trackEvent\", \"last_cat\", \"last_action\", \"last_label\"]);\n//]]>\n</script>}
             end
@@ -327,13 +348,11 @@ module Gaq
         it 'renders properly' do
           flash.should be_equal(flash_from_last_request)
 
+          track_event_instruction = Instruction::TrackEvent.new ["category", "action", "label"]
+          track_event_instruction.for_tracker "foo"
+
           subject.gaq_instructions.should \
-            be == [
-              ["_setAccount", 'UA-XXTESTYY-1'],
-              ["_setCustomVar", 0, :var, "blah", 3],
-              ["_trackEvent", "last_cat", "last_action", "last_label"],
-              ["foo._trackEvent", "category", "action", "label"]
-            ]
+            be ==([*instructions_from_previous_request, track_event_instruction])
 
           rendered.should be == %{<script type=\"text/javascript\">\n//<![CDATA[\nvar _gaq = _gaq || [];\n_gaq.push([\"_setAccount\", \"UA-XXTESTYY-1\"],\n  [\"_setCustomVar\", 0, \"var\", \"blah\", 3],\n  [\"_trackEvent\", \"last_cat\", \"last_action\", \"last_label\"],\n  [\"foo._trackEvent\", \"category\", \"action\", \"label\"]);\n//]]>\n</script>}
         end

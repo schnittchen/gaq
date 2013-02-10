@@ -40,6 +40,11 @@ module Gaq
         [full_first_word, *@params]
       end
 
+      def ==(other)
+        other.class == self.class &&
+          other.instance_variable_get(:@params) == @params
+      end
+
       private
 
       def full_first_word
