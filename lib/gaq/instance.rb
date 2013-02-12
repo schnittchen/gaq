@@ -1,5 +1,5 @@
 require 'gaq/variables'
-require 'gaq/instruction_stack_pair'
+require 'gaq/instruction_stack'
 require 'gaq/renderer'
 require 'gaq/tracker'
 require 'gaq/target_origin'
@@ -24,7 +24,7 @@ module Gaq
     end
 
     def self.for_controller(controller)
-      instruction_stack_pair, promise = InstructionStackPair.pair_and_next_request_promise(controller.flash)
+      instruction_stack_pair, promise = InstructionStack.pair_and_next_request_promise(controller.flash)
       config_proxy = ConfigProxy.new(Gaq.config, controller)
 
       target_origin = TargetOrigin.new(instruction_stack_pair, promise)

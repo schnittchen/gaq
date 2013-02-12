@@ -4,12 +4,12 @@ module Gaq
   describe Instance do
     let(:flash) { {} }
 
-    let(:pair_and_promise) do
-      InstructionStackPair.pair_and_next_request_promise(flash)
+    let(:stack_and_promise) do
+      InstructionStack.stack_and_next_request_promise(flash)
     end
 
-    let(:instruction_stack_pair) do
-      pair_and_promise.first
+    let(:instruction_stack) do
+      stack_and_promise.first
     end
 
     let(:config) do
@@ -28,8 +28,8 @@ module Gaq
       Gaq::Variables.stub(:cleaned_up) { variables }
     end
 
-    let(:next_request_pair_promise) do
-      pair_and_promise.last
+    let(:next_request_stack_promise) do
+      stack_and_promise.last
     end
 
     subject do
@@ -37,7 +37,7 @@ module Gaq
       Instance.finalize
 
       config_proxy = Instance::ConfigProxy.new(config, nil) # controller not needed here
-      target_origin = TargetOrigin.new(instruction_stack_pair, next_request_pair_promise)
+      target_origin = TargetOrigin.new(instruction_stack, next_request_stack_promise)
 
       described_class.new(target_origin, config_proxy).tap do |sub|
         sub.singleton_class.send :public, :gaq_instructions
@@ -127,7 +127,7 @@ module Gaq
       end
 
       it 'renders properly' do
-        flash.should be ==({:analytics_instructions=>[[], [["_trackEvent", "category", "action", "label"]]]})
+        flash.should be ==({:gaqgem=>[["_trackEvent", "category", "action", "label"]]})
 
         subject.gaq_instructions.should be == base_tracker_setup_instructions
 
@@ -190,7 +190,7 @@ module Gaq
           end
 
           it 'renders properly' do
-            flash.should be ==({:analytics_instructions=>[[], [["_trackEvent", "category", "action", "label"]]]})
+            flash.should be ==({:gaqgem=>[["_trackEvent", "category", "action", "label"]]})
 
             subject.gaq_instructions.should \
               be ==([*base_tracker_setup_instructions, custom_var_instruction])
@@ -206,7 +206,7 @@ module Gaq
           end
 
           it 'has data on the flash we are interested in' do
-            expected_flash = {:analytics_instructions=>[[["_setCustomVar", 0, "var", "blah", 3]], [["_trackEvent", "category", "action", "label"]]]}
+            expected_flash = {:gaqgem=>[["_setCustomVar", 0, "var", "blah", 3], ["_trackEvent", "category", "action", "label"]]}
             flash.should be ==(expected_flash)
 
             rendered.should == %{<script type=\"text/javascript\">\n//<![CDATA[\nvar _gaq = _gaq || [];\n_gaq.push([\"_setAccount\", \"UA-XXTESTYY-1\"],\n  [\"_setCustomVar\", 0, \"var\", \"blah\", 3]);\n//]]>\n</script>}
@@ -217,7 +217,7 @@ module Gaq
 
     context "with a non-empty flash" do
       let(:flash_from_last_request) do
-        {:analytics_instructions=>[[["_setCustomVar", 0, :var, "blah", 3]], [["_trackEvent", "last_cat", "last_action", "last_label"]]]}
+        {:gaqgem=>[["_setCustomVar", 0, :var, "blah", 3], ["_trackEvent", "last_cat", "last_action", "last_label"]]}
       end
 
       let(:flash) { flash_from_last_request }
@@ -263,7 +263,7 @@ module Gaq
         end
 
         it 'renders properly' do
-          flash.should be ==({:analytics_instructions=>[[], [["_trackEvent", "category", "action", "label"]]]})
+          flash.should be ==({:gaqgem=>[["_trackEvent", "category", "action", "label"]]})
 
           subject.gaq_instructions.should be == instructions_from_previous_request
 
@@ -329,7 +329,7 @@ module Gaq
             end
 
             it 'renders properly' do
-              flash.should be ==({:analytics_instructions=>[[], [["_trackEvent", "category", "action", "label"]]]})
+              flash.should be ==({:gaqgem=>[["_trackEvent", "category", "action", "label"]]})
 
               subject.gaq_instructions.should \
                 be ==([*instructions_from_previous_request[0..1], custom_var_instruction, instructions_from_previous_request[2]])
