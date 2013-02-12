@@ -7,14 +7,16 @@ module Gaq
     class Base
       POS_IDENTS = [:initial, :setup, :variables, :main]
 
-      delegate :position_ident, to: 'self.class'
-
       attr_reader :tracker_name
 
       def initialize(params)
         @params = params.zip(get_signature.take(params.length)).map do |param, type|
           InstructionParamType.coerce(param, type)
         end
+      end
+
+      def position_ident
+        self.class.get_position_ident
       end
 
       def for_tracker(tracker_name)
@@ -73,6 +75,10 @@ module Gaq
         end
 
         # getters
+
+        def get_position_ident
+          @position_ident || POS_IDENTS.last
+        end
 
         def get_signature
           @signature

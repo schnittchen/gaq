@@ -2,15 +2,17 @@ require 'active_support/core_ext/module/delegation'
 
 module Gaq
   class InstructionStackPair
-    attr_reader :early
-
     def initialize(early = [], regular = [])
-      @early, @regular = early, regular
+      _, @regular = early, regular
     end
 
     delegate :push, :to_a, to: :@regular
 
     FLASH_KEY = :analytics_instructions #TODO change this
+
+    def ordered
+      @regular.sort_by(&:position_slot)
+    end
 
     class FlashArray < Array
       def push(instruction)
@@ -25,7 +27,7 @@ module Gaq
             Instruction::Base.deserialize(item)
           end
         end
-        pair = new(*args)
+        pair = new([], Array(args.inject(:+)))
         promise = -> do
           flash[FLASH_KEY] = [FlashArray.new, FlashArray.new]
           new(*flash[FLASH_KEY])

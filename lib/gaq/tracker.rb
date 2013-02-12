@@ -62,7 +62,7 @@ module Gaq
           Variables.cleaned_up.each do |v|
             define_method "#{v[:name]}=" do |value|
               instruction = Instruction::SetCustomVar.new [v[:slot], v[:name], value, v[:scope]]
-              @instruction_stack_pair.early.push instruction
+              @instruction_stack_pair.push instruction
             end
           end
 

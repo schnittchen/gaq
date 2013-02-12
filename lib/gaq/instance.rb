@@ -44,7 +44,7 @@ module Gaq
 
     def gaq_instructions
       instruction_stack_pair = @target_origin.instruction_stack_pair
-      [*setup_gaq_items, *instruction_stack_pair.early, *instruction_stack_pair.to_a]
+      [*setup_gaq_items, *instruction_stack_pair.ordered]
     end
 
     def setup_gaq_items
