@@ -76,3 +76,10 @@ This feature uses the flash for storing _gaq items between requests.
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create new Pull Request
+
+### Testing
+
+Test dependencies are declared in the Gemfile. There is a dummy rails application
+in `spec-dummy` for integration tests (which we need because gaq keeps state in
+the session). Integration specs live inside the dummy app!
+All specs are run from guard.
