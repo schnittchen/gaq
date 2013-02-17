@@ -2,9 +2,9 @@
 
 require 'spec_helper'
 
-feature "widget management" do
-  scenario "creating a new widget" do
-    visit '/'
-    expect(page).to have_text("You’re riding Ruby on Rails")
+describe "gaq snippet presence" do
+  it "renders 'gaq' in the page" do
+    visit '/snippet_presence'
+    expect(page.body).to have_text("_gaq")
   end
 end
