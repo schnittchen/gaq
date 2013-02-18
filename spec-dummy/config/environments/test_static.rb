@@ -32,4 +32,6 @@ Dummy::Application.configure do
 
   # Print deprecation notices to the stderr
   config.active_support.deprecation = :stderr
+
+  config.gaq.web_property_id = 'UA-TESTSTAT-1'
 end

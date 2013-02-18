@@ -4,6 +4,11 @@ guard 'rspec' do
   watch('spec/spec_helper.rb')  { "spec" }
 end
 
-guard 'rspec', :spec_paths => "spec-dummy/spec", cli: "-I spec-dummy/spec" do
 
+guard 'rspec', :spec_paths => "spec-dummy/spec", cli: "-I spec-dummy/spec --tag ~dynamic",
+  env: { 'RAILS_ENV' => 'test_static' } do
+end
+
+guard 'rspec', :spec_paths => "spec-dummy/spec", cli: "-I spec-dummy/spec --tag ~static",
+  env: { 'RAILS_ENV' => 'test_dynamic' } do
 end
