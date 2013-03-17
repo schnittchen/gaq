@@ -29,7 +29,30 @@ describe "gaq snippet presence" do
     end
 
     it "starts by initializing _gaq array" do
-      gaq_js_lines.first.should == "var _gaq = _gaq || [];"
+      gaq_js_instructions.first.should == "var _gaq = _gaq || [];"
+    end
+
+    it "continues with a _gaq.push line" do
+      gaq_js_instructions.second.should match(%r{\A_gaq.push\(.*\);\Z}m)
+    end
+
+    it "does not have more js lines" do
+      gaq_js_instructions.should have(2).items
+    end
+
+    describe "pushed instructions" do
+      it "pushed the expected instructions, part 1" do
+        gaq_pushed_instructions.should have(3).items
+
+        first_instruction, second_instruction, third_instruction = gaq_pushed_instructions
+        first_instruction.should be_instruction("_setAccount")
+        second_instruction.should be_instruction("_trackPageview").without_args
+        third_instruction.should track_event_from_before_filter('snippet_presence')
+      end
+
+      it "pushed the expected instructions, part 2", :static do
+        gaq_pushed_instructions.first.should be_instruction("_setAccount").with_args('UA-TESTSTAT-1')
+      end
     end
   end
 end
