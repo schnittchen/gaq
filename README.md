@@ -79,7 +79,14 @@ This feature uses the flash for storing _gaq items between requests.
 
 ### Testing
 
-Test dependencies are declared in the Gemfile. There is a dummy rails application
-in `spec-dummy` for integration tests (which we need because gaq keeps state in
-the session). Integration specs live inside the dummy app!
+Test dependencies are declared in the Gemfile.
 All specs are run from guard.
+
+#### Dummy app
+
+There is a dummy rails application
+in `spec-dummy` for integration tests, which we need because gaq keeps state in
+the session. The integration specs are located inside of it.
+
+It has two test environments, `test_static` and `test_dynamic`. Specs tagged with
+`:static` will not be run under `test_dynamic` and vice versa.
