@@ -2,10 +2,9 @@ require 'nokogiri'
 
 module Helpers
   def gaq_cdata
-    return @gaq_cdata if @gaq_cdata
     html = Nokogiri::HTML.parse(page.body)
 
-    @gaq_cdata = html.css('script[type="text/javascript"]').find do |script|
+    html.css('script[type="text/javascript"]').find do |script|
       cdata = script.children.find(&:cdata?) \
         and cdata.text.include?('_gaq') \
         and break(cdata)
