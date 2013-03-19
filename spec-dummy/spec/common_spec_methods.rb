@@ -15,7 +15,7 @@ module Helpers
     /<!\[CDATA\[(.*)\]\]>/m.match(gaq_cdata)[1]
   end
 
-  def gaq_js_instructions
+  def gaq_split_at_snippet_beginning
     text_lines_without_comments = gaq_cdata_content.split("\n").map do |line|
       if me = %r{^(.*?)//}.match(line)
         line = me[1]
@@ -28,7 +28,15 @@ module Helpers
       line
     end.reject(&:blank?)
 
-    text_lines_without_comments.join("\n").split(%r{(?<=;)\n}m)
+    text_lines_without_comments.join("\n").split(%r{(?=\(function\(\))})
+  end
+
+  def snippet_and_beyond
+    gaq_split_at_snippet_beginning[1..-1]
+  end
+
+  def gaq_js_instructions
+    gaq_split_at_snippet_beginning.first.split(%r{(?<=;)\n}m)
   end
 
   def gaq_pushed_instructions
@@ -38,8 +46,13 @@ module Helpers
       instruction_line.should start_with('[')
       instruction_line.should end_with(']')
       instruction_line[1..-2].split(/,\s*/).map do |segment|
-        segment.should start_with("'")
-        segment.should end_with("'")
+        if segment[0] == "'"
+          segment.should start_with("'")
+          segment.should end_with("'")
+        else
+          segment.should start_with('"')
+          segment.should end_with('"')
+        end
         segment[1..-2]
       end
     end

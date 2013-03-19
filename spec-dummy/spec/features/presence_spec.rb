@@ -36,8 +36,14 @@ describe "gaq snippet presence" do
       gaq_js_instructions.second.should match(%r{\A_gaq.push\(.*\);\Z}m)
     end
 
-    it "does not have more js lines" do
+    it "does not have more js lines before the snippet" do
       gaq_js_instructions.should have(2).items
+    end
+
+    it "continues with the snippet, and that's the end" do
+      snippet_and_beyond.should have(1).item
+      snippet_and_beyond.first.should start_with('(function()')
+      snippet_and_beyond.first.should end_with('})();')
     end
 
     describe "pushed instructions" do
