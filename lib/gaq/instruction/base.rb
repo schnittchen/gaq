@@ -21,12 +21,6 @@ module Gaq
         self
       end
 
-      def json_parameters
-        @params.zip(get_signature.take(@params.length)).map do |param, type|
-          InstructionParamType.jsonify(param, type)
-        end
-      end
-
       def to_json
         "[#{[full_first_array_item, *json_parameters].join(', ')}]"
       end
@@ -41,6 +35,12 @@ module Gaq
       end
 
       private
+
+      def json_parameters
+        @params.zip(get_signature.take(@params.length)).map do |param, type|
+          InstructionParamType.jsonify(param, type)
+        end
+      end
 
       def full_first_word
         [@tracker_name, get_tracker_method].compact.join('.')
