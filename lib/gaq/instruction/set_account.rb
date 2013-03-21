@@ -3,7 +3,7 @@ require 'gaq/instruction/base'
 module Gaq
   module Instruction
     class SetAccount < Base
-      positionable :initial
+      stack_position :initial
 
       tracker_method '_setAccount'
 

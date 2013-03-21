@@ -5,18 +5,15 @@ require 'gaq/instruction_param_type'
 module Gaq
   module Instruction
     class Base
-      POS_IDENTS = [:initial, :setup, :variables, :main]
+      STACK_POSITION_NAMES = [:initial, :setup, :variables, :main]
 
       attr_reader :tracker_name
+      delegate :stack_sort_value, to: 'self.class'
 
       def initialize(params)
         @params = params.zip(get_signature.take(params.length)).map do |param, type|
           InstructionParamType.coerce(param, type)
         end
-      end
-
-      def position_ident
-        self.class.get_position_ident
       end
 
       def for_tracker(tracker_name)
@@ -32,10 +29,6 @@ module Gaq
 
       def to_json
         "[#{[full_first_array_item, *json_parameters].join(', ')}]"
-      end
-
-      def position_slot
-        POS_IDENTS.index(position_ident)
       end
 
       def serialize
@@ -62,8 +55,8 @@ module Gaq
       class << self
         # dsl methods
 
-        def positionable(pos_ident)
-          @position_ident = pos_ident
+        def stack_position(position_name)
+          @stack_sort_value = STACK_POSITION_NAMES.index(position_name)
         end
 
         def tracker_method(name = nil)
@@ -76,8 +69,8 @@ module Gaq
 
         # getters
 
-        def get_position_ident
-          @position_ident || POS_IDENTS.last
+        def stack_sort_value
+          @stack_sort_value ||= STACK_POSITION_NAMES.length - 1
         end
 
         def get_signature

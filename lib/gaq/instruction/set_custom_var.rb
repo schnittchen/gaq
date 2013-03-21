@@ -3,7 +3,7 @@ require 'gaq/instruction/base'
 module Gaq
   module Instruction
     class SetCustomVar < Base
-      positionable :variables
+      stack_position :variables
 
       tracker_method '_setCustomVar'
 

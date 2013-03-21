@@ -11,7 +11,7 @@ module Gaq
     FLASH_KEY = :gaqgem
 
     def ordered
-      @instructions.sort_by(&:position_slot)
+      @instructions.sort_by(&:stack_sort_value)
     end
 
     class FlashArray
@@ -25,7 +25,7 @@ module Gaq
 
       def push(instruction)
         @instructions.push instruction
-        @instructions.sort_by!(&:position_slot)
+        @instructions.sort_by!(&:stack_sort_value)
         @stack_in_flash.replace @instructions.map { |ins| ins.serialize }
       end
     end

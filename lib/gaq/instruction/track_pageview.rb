@@ -3,7 +3,7 @@ require 'gaq/instruction/base'
 module Gaq
   module Instruction
     class TrackPageview < Base
-      positionable :setup
+      stack_position :setup
 
       tracker_method '_trackPageview'
 
