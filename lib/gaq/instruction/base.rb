@@ -10,6 +10,8 @@ module Gaq
       attr_reader :tracker_name
       delegate :stack_sort_value, to: 'self.class'
 
+      # @TODO: the serialize - deserialize - coerce (in initialize) circle smells
+
       def initialize(params)
         @params = params.zip(get_signature.take(params.length)).map do |param, type|
           InstructionParamType.coerce(param, type)
