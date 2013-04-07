@@ -1,5 +1,6 @@
 require 'gaq/variables'
 require 'gaq/tracker'
+require 'gaq/options'
 
 module Gaq
   module Helper
@@ -14,30 +15,9 @@ module Gaq
     end
   end
 
-  class Options < ActiveSupport::OrderedOptions
-    def initialize(default_tracker_config)
-      super()
-      @default_tracker_config = default_tracker_config
-
-      self.track_pageview = true #TODO this is a tracker command
-      self.anonymize_ip = false
-      self.render_ga_js = :production
-    end
-
-    delegate :declare_variable, to: Variables
-    delegate :web_property_id=, to: :@default_tracker_config
-
-    def additional_trackers=(tracker_names_ary)
-      Tracker.setup_for_additional_tracker_names(*tracker_names_ary)
-    end
-
-    def tracker(tracker_name)
-      Tracker.tracker_config(tracker_name)
-    end
-  end
-
   class Railtie < Rails::Railtie
-    config.gaq = Options.new(Tracker.default_tracker_config)
+    Options.build_instance(Tracker.default_tracker_config)
+    config.gaq = Options.instance.legacy
 
     config.after_initialize do
       Instance.finalize
