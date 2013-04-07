@@ -38,8 +38,9 @@ module Gaq
 
       config_proxy = Instance::ConfigProxy.new(config, nil) # controller not needed here
       target_origin = TargetOrigin.new(instruction_stack, next_request_stack_promise)
+      controller_facade = nil
 
-      described_class.new(target_origin, config_proxy).tap do |sub|
+      described_class.new(target_origin, config_proxy, controller_facade).tap do |sub|
         sub.singleton_class.send :public, :gaq_instructions
         sub.stub(:render_ga_js) { false }
       end

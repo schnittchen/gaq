@@ -3,6 +3,7 @@ require 'gaq/instruction_stack'
 require 'gaq/renderer'
 require 'gaq/tracker'
 require 'gaq/target_origin'
+require 'gaq/controller_facade'
 
 module Gaq
   class Instance
@@ -11,6 +12,7 @@ module Gaq
       delegate(*Target.target_methods, to: :@default_target)
     end
 
+    # @TODO get rid of
     class ConfigProxy
       def initialize(config, controller)
         @config, @controller = config, controller
@@ -24,14 +26,16 @@ module Gaq
     end
 
     def self.for_controller(controller)
+      controller_facade = ControllerFacade.new(controller)
+
       instruction_stack, promise = InstructionStack.stack_and_next_request_promise(controller.flash)
       config_proxy = ConfigProxy.new(Gaq.config, controller)
 
       target_origin = TargetOrigin.new(instruction_stack, promise)
-      new(target_origin, config_proxy)
+      new(target_origin, config_proxy, controller_facade)
     end
 
-    def initialize(target_origin, config_proxy)
+    def initialize(target_origin, config_proxy, controller_facade)
       @target_origin, @config_proxy = target_origin, config_proxy
       @default_target = @target_origin.default_target
     end
