@@ -4,6 +4,7 @@ require 'gaq/instruction/set_account'
 require 'gaq/instruction/track_event'
 require 'gaq/instruction/set_custom_var'
 require 'gaq/fetch_config_value'
+require 'gaq/tracker_pool'
 
 module Gaq
   class Tracker
@@ -30,8 +31,6 @@ module Gaq
 
     # @TODO bad singleton
     class << self
-      attr_reader :config # for now
-
       include FetchConfigValue
 
       def pre_setup
@@ -42,10 +41,6 @@ module Gaq
         tracker_names.map(&:to_s).each_with_object(@tracker_data) do |tracker_name, data|
           data[tracker_name] = Options.new
         end
-      end
-
-      def tracker_methods
-        [*public_instance_methods(false), *Tracker.variable_methods.public_instance_methods(false)]
       end
 
       def tracker_config(tracker_name)
@@ -63,22 +58,12 @@ module Gaq
         end
       end
 
-      def variable_methods
-        @variable_methods ||= Module.new.module_eval do
-          Variables.cleaned_up.each do |v|
-            define_method "#{v[:name]}=" do |value|
-              instruction = Instruction::SetCustomVar.new [v[:slot], v[:name], value, v[:scope]]
-              @instruction_stack.push instruction
-            end
-          end
+      delegate :variable_methods, :reset_variable_methods, :tracker_methods, to: :pool
 
-          self
-        end
-      end
+      private
 
-      # happy testing!
-      def reset_variable_methods
-        @variable_methods = nil
+      def pool
+        TrackerPool.new
       end
     end
 
