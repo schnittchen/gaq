@@ -3,6 +3,7 @@ require 'active_support/ordered_options'
 require 'gaq/instruction/set_account'
 require 'gaq/instruction/track_event'
 require 'gaq/instruction/set_custom_var'
+require 'gaq/fetch_config_value'
 
 module Gaq
   class Tracker
@@ -27,7 +28,12 @@ module Gaq
       end
     end
 
+    # @TODO bad singleton
     class << self
+      attr_reader :config # for now
+
+      include FetchConfigValue
+
       def pre_setup
         @tracker_data = { nil => Options.new }
       end
@@ -50,9 +56,9 @@ module Gaq
         @tracker_data[nil]
       end
 
-      def setup_instructions(config_proxy)
+      def setup_instructions(controller_facade)
         @tracker_data.map do |tracker_name, options|
-          web_property_id = config_proxy.fetch(:web_property_id, options)
+          web_property_id = fetch_config_value(:web_property_id, options)
           Instruction::SetAccount.new [web_property_id]
         end
       end

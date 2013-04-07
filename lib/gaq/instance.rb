@@ -36,6 +36,7 @@ module Gaq
     end
 
     def initialize(target_origin, config_proxy, controller_facade)
+      @controller_facade = controller_facade
       @target_origin, @config_proxy = target_origin, config_proxy
       @default_target = @target_origin.default_target
     end
@@ -52,7 +53,7 @@ module Gaq
     end
 
     def setup_gaq_items
-      result = Tracker.setup_instructions(@config_proxy)
+      result = Tracker.setup_instructions(@controller_facade)
       result << ['_gat._anonymizeIp'] if fetch_config(:anonymize_ip)
       result << ['_trackPageview'] if fetch_config(:track_pageview)
       return result
