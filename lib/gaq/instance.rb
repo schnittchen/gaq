@@ -54,12 +54,15 @@ module Gaq
       return result
     end
 
+    # make stubbable @TODO fix test smell
+    def render_ga_js
+      result = fetch_config(:render_ga_js)
+      result = Renderer.interpret_render_ga_js_config(result, Rails.env)
+    end
+
     public
 
     def render(context)
-      render_ga_js = fetch_config(:render_ga_js)
-      render_ga_js = Renderer.interpret_render_ga_js_config(render_ga_js, Rails.env)
-
       Renderer.new(context, render_ga_js).render(gaq_instructions)
     end
   end
