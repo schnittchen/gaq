@@ -99,10 +99,10 @@ module Gaq
         it "sets the first flash item's first item to the command name (target set)" do
           null_coercing_and_serializing
 
-          command.target_name = "target"
+          command.tracker_name = "tracker"
 
           flash_data_item.should have(2).items
-          flash_data_item.first.should be == "target._myFooCommand"
+          flash_data_item.first.should be == "tracker._myFooCommand"
         end
       end
     end
@@ -141,24 +141,24 @@ module Gaq
         command.params.should be == ["first deserialized string", "second deserialized string"]
       end
 
-      it "sets target name to nil when no explicit target given" do
+      it "sets tracker name to nil when no explicit tracker given" do
         flash_item = ["_myFooCommand"]
         commands = subject.commands_from_flash_items([flash_item])
 
         commands.should have(1).item
         command = commands.first
 
-        command.target_name.should be_nil
+        command.tracker_name.should be_nil
       end
 
-      it "correctly sets present target name" do
-        flash_item = ["my_target._myFooCommand"]
+      it "correctly sets present tracker name" do
+        flash_item = ["my_tracker._myFooCommand"]
         commands = subject.commands_from_flash_items([flash_item])
 
         commands.should have(1).item
         command = commands.first
 
-        command.target_name.should be == "my_target"
+        command.tracker_name.should be == "my_tracker"
       end
     end
   end

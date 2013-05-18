@@ -26,16 +26,16 @@ module Gaq
 
         params = pre_serialize_params(command.params, descriptor.signature)
 
-        first_segment = [command.target_name, command.name].compact.join('.')
+        first_segment = [command.tracker_name, command.name].compact.join('.')
         [first_segment, *params]
       end
     end
 
     def commands_from_flash_items(flash_items)
       flash_items.map do |flash_item|
-        descriptor, target_name = descriptor_and_target_name(flash_item.first)
+        descriptor, tracker_name = descriptor_and_target_name(flash_item.first)
         params = deserialize_items(flash_item.drop(1), descriptor.signature)
-        Command.new(descriptor.identifier, descriptor.name, params, target_name)
+        Command.new(descriptor.identifier, descriptor.name, params, tracker_name)
       end
     end
 
@@ -46,15 +46,15 @@ module Gaq
       Command.new(identifier, descriptor.name, params)
     end
 
-    Command = Struct.new(:identifier, :name, :params, :target_name)
+    Command = Struct.new(:identifier, :name, :params, :tracker_name)
 
     private
 
     def descriptor_and_target_name(first_segment)
       split = first_segment.split('.')
-      command_name, target_name = split.reverse
+      command_name, tracker_name = split.reverse
       descriptor = @descriptors.values.find { |desc| desc.name == command_name }
-      [descriptor, target_name]
+      [descriptor, tracker_name]
     end
 
     def coerce_params(params, signature)
