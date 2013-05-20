@@ -33,7 +33,7 @@ module Gaq
     end
 
     class << self
-      def tracker_commands_module(variables)
+      def variable_commands_module(variables)
         Module.new do
           variables.each do |variable|
             module_eval <<-RUBY_EVAL, __FILE__, __LINE__ + 1

@@ -58,7 +58,7 @@ module Gaq
       end
     end
 
-    describe ".tracker_commands_module" do
+    describe ".variable_commands_module" do
       let(:variable) do
         result = Configuration::Variable.new(4, "myvar", 2)
         result.slot.should be == 4
@@ -69,7 +69,7 @@ module Gaq
 
       subject do
         cls = Class.new(described_class)
-        cls.send :include, described_class.tracker_commands_module([variable])
+        cls.send :include, described_class.variable_commands_module([variable])
         cls.new(target_factory, factory_token, new_command_proc, commands, tracker_name)
       end
 
