@@ -1,3 +1,4 @@
+require 'forwardable'
 require 'active_support/ordered_options'
 
 module Gaq
