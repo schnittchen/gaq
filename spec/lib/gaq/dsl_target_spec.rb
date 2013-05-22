@@ -6,7 +6,7 @@ require 'gaq/command_language'
 module Gaq
   describe DslTarget do
     let(:target_factory) { double "target factory" }
-    let(:factory_token) { double "factory token" }
+    let(:factory_token) { Object.new }
     let(:new_command_proc) { double "new_command_proc" }
     let(:commands) { double "commands" }
     let(:tracker_name) { "custom tracker name" }
@@ -47,7 +47,7 @@ module Gaq
     end
 
     describe "#track_event", with_instance_subject: true do
-      it "foo" do
+      it "creates and pushes a new command" do
         command = command_expecting_tracker_name
 
         new_command_proc.should_receive(:call)
