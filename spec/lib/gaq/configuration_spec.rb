@@ -1,5 +1,8 @@
 require 'gaq/configuration'
 
+require 'gaq/interprets_config'
+require 'active_support/string_inquirer'
+
 module Gaq
   describe Configuration do
     let(:rails) { subject.rails_config }
@@ -131,6 +134,62 @@ module Gaq
         default_tracker_config = find_tracker_config_by_name(nil)
 
         default_tracker_config.web_property_id.should be == "bla"
+      end
+    end
+
+    describe "#render_ga_js?" do
+      let(:environment) do
+        ActiveSupport::StringInquirer.new(example.metadata[:env].to_s)
+      end
+
+      def result
+        subject.render_ga_js?(environment)
+      end
+
+
+      describe "this StringInquirer setup" do
+        it "works as expected", env: :development do
+          environment.should be_development
+          environment.should_not be_production
+        end
+      end
+
+      context "with rails_config.render_ga_js = true or false" do
+        it "reports those values " do
+          rails.render_ga_js = true
+          result.should be == true
+
+          rails.render_ga_js = false
+          result.should be == false
+        end
+      end
+
+      context "with rails_config.render_ga_ja = some symbol" do
+        it "compares with given environment", env: :production do
+          rails.render_ga_js = :production
+          result.should be == true
+
+          rails.render_ga_js = :development
+          result.should be == false
+        end
+      end
+
+      context "with rails_config.render_ga_ja = Array of symbols" do
+        it "compares with given environment", env: :production do
+          rails.render_ga_js = [:production, :test]
+          result.should be == true
+
+          rails.render_ga_js = [:development, :test]
+          result.should be == false
+        end
+      end
+
+      context "with rails_config.render_ga_ja = callable object (for interpret_config)" do
+        it "passes it through" do
+          lmbda = ->{}
+          rails.render_ga_js = lmbda
+          result.should be lmbda
+        end
       end
     end
   end

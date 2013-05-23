@@ -78,6 +78,19 @@ module Gaq
       @tracker_configs.values
     end
 
+    def render_ga_js?(environment)
+      environment = environment.to_s
+
+      case render_ga_js
+      when TrueClass, FalseClass
+        render_ga_js
+      when Array, Symbol
+        Array(render_ga_js).map(&:to_s).include? environment
+      else
+        render_ga_js
+      end
+    end
+
     class TrackerConfig
       attr_reader :rails_config, :tracker_name
 
