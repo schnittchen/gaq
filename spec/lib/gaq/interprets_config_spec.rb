@@ -13,7 +13,7 @@ module Gaq
       end.new
     end
 
-    let(:controller) { double "controller" }
+    let(:controller) { Object.new }
 
     let(:controller_facade) do
       ControllerFacade.new(controller)
@@ -32,28 +32,6 @@ module Gaq
       end
 
       subject.interpret_config(value, controller_facade).should be :foo
-    end
-
-    context "with Rails.env stubbed" do
-      around do |example|
-        InterpretsConfig.module_eval do
-          begin
-            InterpretsConfig::Rails = Class.new do
-              def self.env
-                ActiveSupport::StringInquirer.new("development")
-              end
-            end
-            example.call
-          ensure
-            InterpretsConfig.send :remove_const, :Rails rescue nil
-          end
-        end
-      end
-
-      it "resolves symbols as Rails environment predicates" do
-        subject.interpret_config(:development, controller_facade).should be true
-        subject.interpret_config(:production, controller_facade).should be false
-      end
     end
   end
 end
