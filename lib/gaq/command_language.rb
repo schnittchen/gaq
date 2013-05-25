@@ -40,7 +40,7 @@ module Gaq
     end
 
     def new_command(identifier, *params)
-      descriptor = @descriptors[identifier]
+      descriptor = @descriptors.fetch(identifier) { raise "no command with identifier #{identifier.inspect}" }
       params = coerce_params(params, descriptor.signature)
 
       Command.new(identifier, descriptor.name, params)
