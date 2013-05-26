@@ -31,8 +31,16 @@ module Gaq
       subject.knows_command(:bar) do |desc|
         desc.signature = [String, Integer]
         desc.name = "_myBarCommand"
+        desc.sort_slot = 1
         descriptors[:bar] = desc
       end if example.metadata[:bar_command]
+
+      subject.knows_command(:baz) do |desc|
+        desc.signature = []
+        desc.name = "_myBazCommand"
+        desc.sort_slot = 0
+        descriptors[:baz] = desc
+      end if example.metadata[:baz_command]
     end
 
     RSpec::Matchers.define :be_identified_as do |identifier|
@@ -135,7 +143,32 @@ module Gaq
     end
 
     describe ".sort_commands" do
-      it "properly sorts commands"
+      def assert_order(commands)
+        commands[0].should be_identified_as(:baz)
+        commands[1].should be_identified_as(:bar)
+        commands[2].should be_identified_as(:foo)
+      end
+
+      it "sorts commands by sort_slot, missing sort_slot values last",
+          foo_command: true, bar_command: true, baz_command: true do
+        commands = [
+          subject.new_command(:foo),
+          subject.new_command(:bar),
+          subject.new_command(:baz)
+        ]
+
+        subject.sort_commands(commands)
+        assert_order(commands)
+
+        commands = [
+          subject.new_command(:bar),
+          subject.new_command(:foo),
+          subject.new_command(:baz)
+        ]
+
+        subject.sort_commands(commands)
+        assert_order(commands)
+      end
     end
 
     describe ".commands_from_flash_items", foo_command: true, bar_command: true do

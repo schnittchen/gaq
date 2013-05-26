@@ -10,7 +10,7 @@ module Gaq
       @descriptors = {}
     end
 
-    CommandDescriptor = Struct.new(:signature, :name, :identifier)
+    CommandDescriptor = Struct.new(:signature, :name, :identifier, :sort_slot)
 
     def knows_command(identifier)
       @descriptors[identifier] = CommandDescriptor.new.tap do |desc|
@@ -37,8 +37,11 @@ module Gaq
       end
     end
 
+    # modifies commands
     def sort_commands(commands)
-      # @TODO
+      commands.sort_by! do |command|
+        command.descriptor.sort_slot || sort_slot_fallback
+      end
     end
 
     def new_command(identifier, *params)
@@ -51,6 +54,10 @@ module Gaq
     Command = Struct.new(:descriptor, :name, :params, :tracker_name)
 
     private
+
+    def sort_slot_fallback
+      @sort_slot_fallback ||= @descriptors.values.map(&:sort_slot).compact.max + 1
+    end
 
     def command_to_segments(command)
       descriptor = command.descriptor
@@ -98,11 +105,13 @@ module Gaq
         result.knows_command(:set_account) do |desc|
           desc.name = "_setAccount"
           desc.signature = [String]
+          desc.sort_slot = 0
         end
 
         result.knows_command(:track_pageview) do |desc|
           desc.name = "_trackPageview"
           desc.signature = [String]
+          desc.sort_slot = 1
         end
 
         result.knows_command(:track_event) do |desc|
