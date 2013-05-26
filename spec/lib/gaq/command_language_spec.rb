@@ -43,7 +43,7 @@ module Gaq
       end
     end
 
-    describe ".commands_to_flash_items" do
+    shared_examples ".commands_to_flash_items behaves" do
       let(:flash_data_item) do
         flash_items = subject.commands_to_flash_items([command])
         flash_items.should have(1).item
@@ -105,6 +105,22 @@ module Gaq
           flash_data_item.first.should be == "tracker._myFooCommand"
         end
       end
+    end
+
+    describe ".commands_to_flash_items" do
+      let(:result) do
+        subject.commands_to_flash_items([command])
+      end
+
+      it_should_behave_like ".commands_to_flash_items behaves"
+    end
+
+    describe ".commands_to_segments_for_to_json" do
+      let(:result) do
+        subject.commands_to_segments_for_to_json([command])
+      end
+
+      it_should_behave_like ".commands_to_flash_items behaves"
     end
 
     describe ".commands_from_flash_items", foo_command: true, bar_command: true do

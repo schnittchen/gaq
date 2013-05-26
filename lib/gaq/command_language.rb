@@ -22,14 +22,12 @@ module Gaq
 
     def commands_to_flash_items(commands)
       commands.map do |command|
-        descriptor = @descriptors[command.identifier]
-
-        params = pre_serialize_params(command.params, descriptor.signature)
-
-        first_segment = first_segment_from_descriptor_and_tracker_name(descriptor, command.tracker_name)
-        [first_segment, *params]
+        command_to_segments(command)
       end
     end
+
+    # this happens to be the same, but may be different in the future
+    alias_method :commands_to_segments_for_to_json, :commands_to_flash_items
 
     def commands_from_flash_items(flash_items)
       flash_items.map do |flash_item|
@@ -49,6 +47,15 @@ module Gaq
     Command = Struct.new(:identifier, :name, :params, :tracker_name)
 
     private
+
+    def command_to_segments(command)
+      descriptor = @descriptors[command.identifier]
+
+      params = pre_serialize_params(command.params, descriptor.signature)
+
+      first_segment = first_segment_from_descriptor_and_tracker_name(descriptor, command.tracker_name)
+      [first_segment, *params]
+    end
 
     def first_segment_from_descriptor_and_tracker_name(descriptor, tracker_name)
       [tracker_name, descriptor.name].compact.join('.')
