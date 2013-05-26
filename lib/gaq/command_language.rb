@@ -39,9 +39,13 @@ module Gaq
 
     # modifies commands
     def sort_commands(commands)
-      commands.sort_by! do |command|
-        command.descriptor.sort_slot || sort_slot_fallback
+      sorted_pairs = commands.each_with_index.sort_by do |command, index|
+        [
+          command.descriptor.sort_slot || sort_slot_fallback,
+          index
+        ]
       end
+      commands.replace sorted_pairs.map(&:first)
     end
 
     def new_command(identifier, *params)
