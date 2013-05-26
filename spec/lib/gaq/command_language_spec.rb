@@ -19,25 +19,36 @@ module Gaq
       result
     end
 
+    let(:descriptors) { {} }
+
     before do
       subject.knows_command(:foo) do |desc|
         desc.signature = [String]
         desc.name = "_myFooCommand"
+        descriptors[:foo] = desc
       end if example.metadata[:foo_command]
 
       subject.knows_command(:bar) do |desc|
         desc.signature = [String, Integer]
         desc.name = "_myBarCommand"
+        descriptors[:bar] = desc
       end if example.metadata[:bar_command]
     end
 
+    RSpec::Matchers.define :be_identified_as do |identifier|
+      match do |command|
+        command.descriptor.identifier.equal? identifier
+      end
+    end
+
     describe ".new_command", foo_command: true do
-      it "returns a command with expected identifier, name and coerced params" do
+      it "returns a properly identified command with expected name and coerced params" do
         value_coercer.should_receive(:call).with(String, "string").and_return "coerced string"
 
         command = subject.new_command(:foo, "string")
 
-        command.identifier.should be == :foo
+        command.should be_identified_as(:foo)
+
         command.name.should be == "_myFooCommand"
         command.params.should be == ["coerced string"]
       end
@@ -53,7 +64,7 @@ module Gaq
       context "with a command accepting two parameters", bar_command: true do
         let(:command) do
           command = CommandLanguage::Command.new
-          command.identifier = :bar
+          command.descriptor = descriptors[:bar]
           command.name = "_myBarCommand"
           command.params = []
           command
@@ -83,7 +94,7 @@ module Gaq
       context "with a command accepting one parameter", foo_command: true do
         let(:command) do
           command = CommandLanguage::Command.new
-          command.identifier = :foo
+          command.descriptor = descriptors[:foo]
           command.name = "_myFooCommand"
           command.params = ["coerced string"]
           command
@@ -138,11 +149,11 @@ module Gaq
         commands.should have(2).items
 
         command = commands.first
-        command.identifier.should be == :foo
+        command.should be_identified_as(:foo)
         command.name.should be == '_myFooCommand'
 
         command = commands.last
-        command.identifier.should be == :bar
+        command.should be_identified_as(:bar)
         command.name.should be == '_myBarCommand'
       end
 

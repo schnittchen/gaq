@@ -33,7 +33,7 @@ module Gaq
       flash_items.map do |flash_item|
         descriptor, tracker_name = descriptor_and_tracker_name_from_first_segment(flash_item.first)
         params = deserialize_items(flash_item.drop(1), descriptor.signature)
-        Command.new(descriptor.identifier, descriptor.name, params, tracker_name)
+        Command.new(descriptor, descriptor.name, params, tracker_name)
       end
     end
 
@@ -45,15 +45,15 @@ module Gaq
       descriptor = @descriptors.fetch(identifier) { raise "no command with identifier #{identifier.inspect}" }
       params = coerce_params(params, descriptor.signature)
 
-      Command.new(identifier, descriptor.name, params)
+      Command.new(descriptor, descriptor.name, params)
     end
 
-    Command = Struct.new(:identifier, :name, :params, :tracker_name)
+    Command = Struct.new(:descriptor, :name, :params, :tracker_name)
 
     private
 
     def command_to_segments(command)
-      descriptor = @descriptors[command.identifier]
+      descriptor = command.descriptor
 
       params = pre_serialize_params(command.params, descriptor.signature)
 
