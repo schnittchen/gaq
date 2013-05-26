@@ -94,7 +94,27 @@ module Gaq
     end
 
     def self.singleton
-      # XXX
+      new.tap do |result|
+        result.knows_command(:set_account) do |desc|
+          desc.name = "_setAccount"
+          desc.signature = [String]
+        end
+
+        result.knows_command(:track_pageview) do |desc|
+          desc.name = "_trackPageview"
+          desc.signature = [String]
+        end
+
+        result.knows_command(:track_event) do |desc|
+          desc.name = "_trackEvent"
+          desc.signature = [String, String, String, Integer, Boolean]
+        end
+
+        # @TODO
+        result.value_coercer = ->(type, x) {x}
+        result.value_preserializer = ->(type, x) {x}
+        result.value_deserializer = ->(type, x) {x}
+      end
     end
   end
 end
