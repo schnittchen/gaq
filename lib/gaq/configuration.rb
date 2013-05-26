@@ -144,8 +144,8 @@ module Gaq
     end
 
     class << self
-      def instance
-        @instance ||= new
+      def singleton
+        @singleton ||= new
       end
     end
   end
