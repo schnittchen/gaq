@@ -123,6 +123,10 @@ module Gaq
       it_should_behave_like ".commands_to_flash_items behaves"
     end
 
+    describe ".sort_commands" do
+      it "properly sorts commands"
+    end
+
     describe ".commands_from_flash_items", foo_command: true, bar_command: true do
       it "correctly detects the command" do
         flash_items = [
