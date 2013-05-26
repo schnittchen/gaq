@@ -82,4 +82,16 @@ RSpec::Matchers.define :be_instruction do |instruction|
   chain :without_args do
     @instruction_args = []
   end
+
+  failure_message_for_should do |actual|
+    message = "expected that #{actual} would be instruction #{instruction.inspect}"
+    if @instruction_args
+      if @instruction_args.empty?
+        message << "without args"
+      else
+        message << " with args #{@instruction_args}"
+      end
+    end
+    message
+  end
 end
