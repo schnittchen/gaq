@@ -1,5 +1,6 @@
 require 'gaq/controller_handle'
 require 'gaq/configuration'
+require 'gaq/class_cache'
 
 module Gaq
   describe ControllerHandle do
@@ -13,7 +14,7 @@ module Gaq
         result
       end
 
-      let(:class_cache) { double "class_cache" }
+      let(:class_cache) { ClassCache.new }
       let(:config) do
         Configuration.new
       end
@@ -36,6 +37,8 @@ module Gaq
       let(:result) do
         subject.finalized_commands_as_segments
       end
+
+      let(:root_target) { subject.root_target }
 
       context "without further configuration" do
         it "returns _setAccount (unset wpi) and _trackPageview for default tracker" do
@@ -69,6 +72,22 @@ module Gaq
             result.should be == [
               ["_setAccount", 'UA-TEST23-5'],
               ["_trackPageview"]
+            ]
+          end
+        end
+      end
+
+      context "with tracker commands issued on default tracker" do
+        context "gaq.track_event 'category', 'action', 'label'" do
+          before do
+            root_target.track_event 'category', 'action', 'label'
+          end
+
+          it "renders the _trackEvent" do
+            result.should be == [
+              ["_setAccount", "UA-XUNSET-S"],
+              ["_trackPageview"],
+              ["_trackEvent", "category", "action", "label"]
             ]
           end
         end
