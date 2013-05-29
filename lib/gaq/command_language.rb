@@ -1,4 +1,4 @@
-# encoding: utf-8
+require 'gaq/boolean'
 
 module Gaq
   class CommandLanguage
@@ -104,29 +104,36 @@ module Gaq
       end
     end
 
+    def self.declare_language_on(instance)
+      instance.knows_command(:set_account) do |desc|
+        desc.name = "_setAccount"
+        desc.signature = [String]
+        desc.sort_slot = 0
+      end
+
+      instance.knows_command(:track_pageview) do |desc|
+        desc.name = "_trackPageview"
+        desc.signature = [String]
+        desc.sort_slot = 1
+      end
+
+      instance.knows_command(:track_event) do |desc|
+        desc.name = "_trackEvent"
+        desc.signature = [String, String, String, Integer, Boolean]
+      end
+    end
+
+    # @TODO
+    def self.define_transformations_on(instance)
+      instance.value_coercer = ->(type, x) {x}
+      instance.value_preserializer = ->(type, x) {x}
+      instance.value_deserializer = ->(type, x) {x}
+    end
+
     def self.singleton
       new.tap do |result|
-        result.knows_command(:set_account) do |desc|
-          desc.name = "_setAccount"
-          desc.signature = [String]
-          desc.sort_slot = 0
-        end
-
-        result.knows_command(:track_pageview) do |desc|
-          desc.name = "_trackPageview"
-          desc.signature = [String]
-          desc.sort_slot = 1
-        end
-
-        result.knows_command(:track_event) do |desc|
-          desc.name = "_trackEvent"
-          desc.signature = [String, String, String, Integer, Boolean]
-        end
-
-        # @TODO
-        result.value_coercer = ->(type, x) {x}
-        result.value_preserializer = ->(type, x) {x}
-        result.value_deserializer = ->(type, x) {x}
+        declare_language_on(result)
+        define_transformations_on(result)
       end
     end
   end
