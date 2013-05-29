@@ -102,6 +102,8 @@ module Gaq
 
         @track_pageview = true
         @rails_config = RailsConfig.new(self)
+
+        @web_property_id = 'UA-XUNSET-S'
       end
 
       class RailsConfig
