@@ -14,7 +14,6 @@ module Gaq
         result
       end
 
-      let(:class_cache) { ClassCache.new }
       let(:config) do
         Configuration.new
       end
@@ -47,7 +46,7 @@ module Gaq
       end
 
       subject do
-        described_class.new(controller_facade, language, class_cache, config).tap do |result|
+        described_class.new(controller_facade, language, ClassCache.new, config).tap do |result|
           result.flash_commands_adapter = flash_commands_adapter
         end
       end
@@ -57,6 +56,12 @@ module Gaq
       end
 
       let(:root_target) { subject.root_target }
+
+      shared_context declare_var: true do
+        before do
+          rails_config.declare_variable :var, scope: 3, slot: 0
+        end
+      end
 
       context "without further configuration" do
         it "returns _setAccount (unset wpi) and _trackPageview for default tracker" do
@@ -130,11 +135,7 @@ module Gaq
         end
       end
 
-      context "with a variable declared" do
-        before do
-          rails_config.declare_variable :var, scope: 3, slot: 0
-        end
-
+      context "with a variable declared", declare_var: true do
         it "returns nothing in addition" do
           result.should be == [
             ["_setAccount", "UA-XUNSET-S"],
@@ -266,11 +267,7 @@ module Gaq
           end
         end
 
-        context "with a variable declared" do
-          before do
-            rails_config.declare_variable :var, scope: 3, slot: 0
-          end
-
+        context "with a variable declared", declare_var: true do
           it "returns nothing in addition" do
             result.should be == [
               ["_setAccount", "UA-XUNSET-S"],
