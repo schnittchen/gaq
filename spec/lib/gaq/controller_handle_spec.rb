@@ -21,11 +21,29 @@ module Gaq
       let(:rails_config) { config.rails_config }
 
       let(:commands_from_flash) { [] }
+      let(:commands_pushed_to_flash) { [] }
 
       let(:flash_commands_adapter) do
         result = double("flash_commands_adapter")
-        result.stub(:commands_from_flash) { commands_from_flash }
+
+        # for test convenience, convert between plain "segments" arrays and proper command objects
+        # this depends on features from language
+
+        result.stub(:commands_from_flash) do
+          language.commands_from_flash_items(commands_from_flash)
+        end
+
+        result.stub(:<<) do |item|
+          item = language.commands_to_flash_items([item]).first
+          commands_pushed_to_flash << item
+        end
+
         result
+      end
+
+      after do
+        commands_pushed_to_flash.should be_empty \
+          unless example.metadata[:push_to_flash]
       end
 
       subject do
@@ -92,6 +110,255 @@ module Gaq
           end
         end
       end
+
+      context "with tracker commands issued on default tracker .next_request" do
+        context "gaq.next_request.track_event 'category', 'action', 'label'", push_to_flash: true do
+          before do
+            root_target.next_request.track_event 'category', 'action', 'label'
+          end
+
+          it "renders the _trackEvent" do
+            result.should be == [
+              ["_setAccount", "UA-XUNSET-S"],
+              ["_trackPageview"]
+            ]
+
+            commands_pushed_to_flash.should be == [
+              ["_trackEvent", "category", "action", "label"]
+            ]
+          end
+        end
+      end
+
+      context "with a variable declared" do
+        before do
+          rails_config.declare_variable :var, scope: 3, slot: 0
+        end
+
+        it "returns nothing in addition" do
+          result.should be == [
+            ["_setAccount", "UA-XUNSET-S"],
+            ["_trackPageview"]
+          ]
+        end
+
+        context "after assigning to variable" do
+          before do
+            root_target.var = "blah"
+          end
+
+          it "renders the _setCustomVar" do
+            pending
+            result.should be == [
+              ["_setAccount", "UA-XUNSET-S"],
+              ["_trackPageview"],
+              ["_setCustomVar", 0, :var, "blah", 3] #XXX
+            ]
+          end
+
+          context "gaq.track_event 'category', 'action', 'label'" do
+            before(:each) do
+              root_target.track_event 'category', 'action', 'label'
+            end
+
+            it "renders the _setCustomVar before the _trackEvent" do
+              pending
+              result.should be == [
+                ["_setAccount", "UA-XUNSET-S"],
+                ["_trackPageview"],
+                ["_setCustomVar", 0, :var, "blah", 3], #XXX
+                ["_trackEvent", "category", "action", "label"]
+              ]
+            end
+          end
+
+          context "gaq.next_request.track_event 'category', 'action', 'label'", push_to_flash: true do
+            before(:each) do
+              root_target.next_request.track_event 'category', 'action', 'label'
+            end
+
+            it "renders the _setCustomVar before the _trackEvent" do
+              pending
+              result.should be == [
+                ["_setAccount", "UA-XUNSET-S"],
+                ["_trackPageview"],
+                ["_setCustomVar", 0, :var, "blah", 3], #XXX
+              ]
+
+              commands_pushed_to_flash.should be == [
+                ["_trackEvent", "category", "action", "label"]
+              ]
+            end
+          end
+
+          context "both track_event and variable assignment on gaq.next_request", push_to_flash: true do
+            before(:each) do
+              root_target.next_request.track_event 'category', 'action', 'label'
+              root_target.next_request.var = "foo"
+            end
+
+            it "pushes the _setCustomVar and the _trackEvent onto the flash storage" do
+              pending
+              result.should be == [
+                ["_setAccount", "UA-XUNSET-S"],
+                ["_trackPageview"],
+                ["_setCustomVar", 0, :var, "blah", 3], #XXX
+              ]
+
+              commands_pushed_to_flash.should be == [
+                ["_trackEvent", "category", "action", "label"],
+                ["_setCustomVar", 0, :var, "foo", 3], #XXX
+              ]
+
+            end
+          end
+
+        end
+      end
+
+      context "with commands stored in flash" do
+        before do
+          commands_from_flash << ["_trackEvent", "last_cat", "last_action", "last_label"]
+          commands_from_flash << ["_setCustomVar", 0, "var", "blah", 3]
+        end
+
+        it "renders these" do
+          result.should be == [
+            ["_setAccount", "UA-XUNSET-S"],
+            ["_trackPageview"],
+            ["_setCustomVar", 0, "var", "blah", 3],
+            ["_trackEvent", "last_cat", "last_action", "last_label"]
+          ]
+        end
+
+        context "gaq.track_event 'category', 'action', 'label'" do
+          before(:each) do
+            root_target.track_event 'category', 'action', 'label'
+          end
+
+          it "renders that in addition" do
+            result.should be == [
+              ["_setAccount", "UA-XUNSET-S"],
+              ["_trackPageview"],
+              ["_setCustomVar", 0, "var", "blah", 3],
+              ["_trackEvent", "last_cat", "last_action", "last_label"],
+              ["_trackEvent", "category", "action", "label"]
+            ]
+          end
+        end
+
+        context "gaq.next_request.track_event 'category', 'action', 'label'", push_to_flash: true do
+          before(:each) do
+            root_target.next_request.track_event 'category', 'action', 'label'
+          end
+
+          it "does not render that in addition" do
+            result.should be == [
+              ["_setAccount", "UA-XUNSET-S"],
+              ["_trackPageview"],
+              ["_setCustomVar", 0, "var", "blah", 3],
+              ["_trackEvent", "last_cat", "last_action", "last_label"],
+            ]
+
+            commands_pushed_to_flash.should be == [
+              ["_trackEvent", "category", "action", "label"]
+            ]
+          end
+        end
+
+        context "with a variable declared" do
+          before do
+            rails_config.declare_variable :var, scope: 3, slot: 0
+          end
+
+          it "returns nothing in addition" do
+            result.should be == [
+              ["_setAccount", "UA-XUNSET-S"],
+              ["_trackPageview"],
+              ["_setCustomVar", 0, "var", "blah", 3],
+              ["_trackEvent", "last_cat", "last_action", "last_label"],
+            ]
+          end
+
+          context "after assigning to variable" do
+            before do
+              root_target.var = "blubb"
+            end
+
+            it "renders both _setCustomVar, in order" do
+              pending
+              result.should be == [
+                ["_setAccount", "UA-XUNSET-S"],
+                ["_trackPageview"],
+                ["_setCustomVar", 0, "var", "blah", 3],
+                ["_setCustomVar", 0, :var, "blubb", 3], #XXX
+                ["_trackEvent", "last_cat", "last_action", "last_label"]
+              ]
+            end
+
+            context "gaq.track_event 'category', 'action', 'label'" do
+              before do
+                root_target.track_event 'category', 'action', 'label'
+              end
+
+              it "renders the _trackEvent in addition" do
+                pending
+                result.should be == [
+                  ["_setAccount", "UA-XUNSET-S"],
+                  ["_trackPageview"],
+                  ["_setCustomVar", 0, "var", "blah", 3],
+                  ["_setCustomVar", 0, :var, "blubb", 3], #XXX
+                  ["_trackEvent", "last_cat", "last_action", "last_label"],
+                  ["_trackEvent", "category", "action", "label"]
+                ]
+              end
+            end
+
+            context "gaq.next_request.track_event 'category', 'action', 'label'", push_to_flash: true do
+              before do
+                root_target.next_request.track_event 'category', 'action', 'label'
+              end
+
+              it "renders the _trackEvent in addition" do
+                pending
+                result.should be == [
+                  ["_setAccount", "UA-XUNSET-S"],
+                  ["_trackPageview"],
+                  ["_setCustomVar", 0, "var", "blah", 3],
+                  ["_setCustomVar", 0, :var, "blubb", 3], #XXX
+                  ["_trackEvent", "last_cat", "last_action", "last_label"],
+                ]
+
+                commands_pushed_to_flash.should be == [
+                  ["_trackEvent", "category", "action", "label"]
+                ]
+              end
+            end
+          end
+
+        end
+      end
+
+      context "with a custom tracker" do
+        before(:each) do
+          rails_config.additional_trackers = ["foo"]
+          root_target["foo"].track_event 'category', 'action', 'label'
+        end
+
+        it "maybe does not render _setAccount for additional tracker under some circumstances"
+
+        it "renders _trackPageview and _trackEvent for that tracker" do
+          result.should be == [
+            ["_setAccount", "UA-XUNSET-S"],
+            ["foo._setAccount", "UA-XUNSET-S"],
+            ["_trackPageview"],
+            ["foo._trackPageview"],
+            ["foo._trackEvent", "category", "action", "label"]
+          ]
+        end
+      end
+
+      it "fails when an undeclared tracker is accessed"
     end
   end
 end
