@@ -121,6 +121,12 @@ module Gaq
         desc.name = "_trackEvent"
         desc.signature = [String, String, String, Integer, Boolean]
       end
+
+      instance.knows_command(:set_custom_var) do |desc|
+        desc.name = "_setCustomVar"
+        desc.signature = [Integer, String, String, Integer]
+        desc.sort_slot = 2
+      end
     end
 
     # @TODO
