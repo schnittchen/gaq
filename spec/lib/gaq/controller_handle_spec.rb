@@ -149,11 +149,10 @@ module Gaq
           end
 
           it "renders the _setCustomVar" do
-            pending
             result.should be == [
               ["_setAccount", "UA-XUNSET-S"],
               ["_trackPageview"],
-              ["_setCustomVar", 0, :var, "blah", 3] #XXX
+              ["_setCustomVar", 0, "var", "blah", 3]
             ]
           end
 
@@ -163,11 +162,10 @@ module Gaq
             end
 
             it "renders the _setCustomVar before the _trackEvent" do
-              pending
               result.should be == [
                 ["_setAccount", "UA-XUNSET-S"],
                 ["_trackPageview"],
-                ["_setCustomVar", 0, :var, "blah", 3], #XXX
+                ["_setCustomVar", 0, "var", "blah", 3],
                 ["_trackEvent", "category", "action", "label"]
               ]
             end
@@ -179,11 +177,10 @@ module Gaq
             end
 
             it "renders the _setCustomVar before the _trackEvent" do
-              pending
               result.should be == [
                 ["_setAccount", "UA-XUNSET-S"],
                 ["_trackPageview"],
-                ["_setCustomVar", 0, :var, "blah", 3], #XXX
+                ["_setCustomVar", 0, "var", "blah", 3],
               ]
 
               commands_pushed_to_flash.should be == [
@@ -199,18 +196,16 @@ module Gaq
             end
 
             it "pushes the _setCustomVar and the _trackEvent onto the flash storage" do
-              pending
               result.should be == [
                 ["_setAccount", "UA-XUNSET-S"],
                 ["_trackPageview"],
-                ["_setCustomVar", 0, :var, "blah", 3], #XXX
+                ["_setCustomVar", 0, "var", "blah", 3],
               ]
 
               commands_pushed_to_flash.should be == [
                 ["_trackEvent", "category", "action", "label"],
-                ["_setCustomVar", 0, :var, "foo", 3], #XXX
+                ["_setCustomVar", 0, "var", "foo", 3],
               ]
-
             end
           end
 
@@ -283,12 +278,11 @@ module Gaq
             end
 
             it "renders both _setCustomVar, in order" do
-              pending
               result.should be == [
                 ["_setAccount", "UA-XUNSET-S"],
                 ["_trackPageview"],
                 ["_setCustomVar", 0, "var", "blah", 3],
-                ["_setCustomVar", 0, :var, "blubb", 3], #XXX
+                ["_setCustomVar", 0, "var", "blubb", 3],
                 ["_trackEvent", "last_cat", "last_action", "last_label"]
               ]
             end
@@ -299,12 +293,11 @@ module Gaq
               end
 
               it "renders the _trackEvent in addition" do
-                pending
                 result.should be == [
                   ["_setAccount", "UA-XUNSET-S"],
                   ["_trackPageview"],
                   ["_setCustomVar", 0, "var", "blah", 3],
-                  ["_setCustomVar", 0, :var, "blubb", 3], #XXX
+                  ["_setCustomVar", 0, "var", "blubb", 3],
                   ["_trackEvent", "last_cat", "last_action", "last_label"],
                   ["_trackEvent", "category", "action", "label"]
                 ]
@@ -317,12 +310,11 @@ module Gaq
               end
 
               it "renders the _trackEvent in addition" do
-                pending
                 result.should be == [
                   ["_setAccount", "UA-XUNSET-S"],
                   ["_trackPageview"],
                   ["_setCustomVar", 0, "var", "blah", 3],
-                  ["_setCustomVar", 0, :var, "blubb", 3], #XXX
+                  ["_setCustomVar", 0, "var", "blubb", 3],
                   ["_trackEvent", "last_cat", "last_action", "last_label"],
                 ]
 
