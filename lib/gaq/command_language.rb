@@ -3,8 +3,6 @@ require 'gaq/boolean'
 module Gaq
   class CommandLanguage
     attr_writer :value_coercer
-    attr_writer :value_preserializer
-    attr_writer :value_deserializer
 
     def initialize
       @descriptors = {}
@@ -32,7 +30,7 @@ module Gaq
     def commands_from_flash_items(flash_items)
       flash_items.map do |flash_item|
         descriptor, tracker_name = descriptor_and_tracker_name_from_first_segment(flash_item.first)
-        params = deserialize_items(flash_item.drop(1), descriptor.signature)
+        params = flash_item.drop(1).take(descriptor.signature.length)
         Command.new(descriptor, descriptor.name, params, tracker_name)
       end
     end
@@ -66,10 +64,8 @@ module Gaq
     def command_to_segments(command)
       descriptor = command.descriptor
 
-      params = pre_serialize_params(command.params, descriptor.signature)
-
       first_segment = first_segment_from_descriptor_and_tracker_name(descriptor, command.tracker_name)
-      [first_segment, *params]
+      [first_segment, *command.params.take(descriptor.signature.length)]
     end
 
     def first_segment_from_descriptor_and_tracker_name(descriptor, tracker_name)
@@ -87,20 +83,6 @@ module Gaq
       signature = signature.take(params.length)
       signature.zip(params).map do |type, param|
         @value_coercer.call(type, param)
-      end
-    end
-
-    def pre_serialize_params(params, signature)
-      signature = signature.take(params.length)
-      signature.zip(params).map do |type, param|
-        @value_preserializer.call(type, param)
-      end
-    end
-
-    def deserialize_items(items, signature)
-      signature = signature.take(items.length)
-      signature.zip(items).map do |type, item|
-        @value_deserializer.call(type, item)
       end
     end
 
@@ -132,8 +114,6 @@ module Gaq
     # @TODO
     def self.define_transformations_on(instance)
       instance.value_coercer = ->(type, x) {x}
-      instance.value_preserializer = ->(type, x) {x}
-      instance.value_deserializer = ->(type, x) {x}
     end
 
     def self.singleton

@@ -3,19 +3,14 @@ require 'gaq/command_language'
 module Gaq
   describe CommandLanguage do
     let(:value_coercer) { double "value coercer" }
-    let(:value_preserializer) { double "value preserializer" }
-    let(:value_deserializer) { double "value deserializer" }
 
-    def null_coercing_and_serializing
+    def null_coercing
       value_coercer.stub(:call) { |type, value| value }
-      value_preserializer.stub(:call) { |type, value| value }
     end
 
     subject do
       result = described_class.new
       result.value_coercer = value_coercer
-      result.value_preserializer = value_preserializer
-      result.value_deserializer = value_deserializer
       result
     end
 
@@ -78,24 +73,19 @@ module Gaq
           command
         end
 
-        it "preserializes params into data items" do
-          value_preserializer.should_receive(:call).with(String, "first coerced string").and_return "first preserialized string"
-          value_preserializer.should_receive(:call).with(Integer, "second coerced string").and_return "second preserialized string"
-
-          command.params << "first coerced string" << "second coerced string"
+        it "adds params to data items" do
+          command.params << "first param" << "second param"
 
           flash_data_item.should have(3).items
-          flash_data_item[1].should be == "first preserialized string"
-          flash_data_item[2].should be == "second preserialized string"
+          flash_data_item[1].should be == "first param"
+          flash_data_item[2].should be == "second param"
         end
 
-        it "preserializes only given params into data item even if less params given than signature length" do
-          value_preserializer.should_receive(:call).with(String, "first coerced string").and_return "first preserialized string"
-
-          command.params << "first coerced string"
+        it "adds only as many params as signature length" do
+          command.params << "first param"
 
           flash_data_item.should have(2).items
-          flash_data_item[1].should be == "first preserialized string"
+          flash_data_item[1].should be == "first param"
         end
       end
 
@@ -104,19 +94,19 @@ module Gaq
           command = CommandLanguage::Command.new
           command.descriptor = descriptors[:foo]
           command.name = "_myFooCommand"
-          command.params = ["coerced string"]
+          command.params = ["param"]
           command
         end
 
         it "sets the first flash item's first item to the command name (no target set)" do
-          null_coercing_and_serializing
+          null_coercing
 
           flash_data_item.should have(2).items
           flash_data_item.first.should be == "_myFooCommand"
         end
 
         it "sets the first flash item's first item to the command name (target set)" do
-          null_coercing_and_serializing
+          null_coercing
 
           command.tracker_name = "tracker"
 
@@ -190,19 +180,15 @@ module Gaq
         command.name.should be == '_myBarCommand'
       end
 
-      it "deserializes parameters" do
-        params = ["first preserialized string", "second preserialized string"]
+      it "sets command's params to remaining segments from flash item" do
+        flash_item = ["_myBarCommand", "first param", "second param"]
 
-        value_deserializer.should_receive(:call).with(String, params.first).and_return("first deserialized string")
-        value_deserializer.should_receive(:call).with(Integer, params.last).and_return("second deserialized string")
-
-        flash_item = ["_myBarCommand", *params]
         commands = subject.commands_from_flash_items([flash_item])
 
         commands.should have(1).item
         command = commands.first
 
-        command.params.should be == ["first deserialized string", "second deserialized string"]
+        command.params.should be == ["first param", "second param"]
       end
 
       it "sets tracker name to nil when no explicit tracker given" do
