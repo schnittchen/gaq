@@ -44,15 +44,29 @@ module Gaq
       end
     end
 
-    describe ".new_command", foo_command: true do
-      it "returns a properly identified command with expected name and coerced params" do
-        value_coercer.should_receive(:call).with(String, "string").and_return "coerced string"
+    describe ".new_command" do
+      it "returns a properly identified and named command", foo_command: true do
+        null_coercing
 
         command = subject.new_command(:foo, "string")
 
         command.should be_identified_as(:foo)
-
         command.name.should be == "_myFooCommand"
+      end
+
+      it "passes params through value coercer", foo_command: true do
+        value_coercer.should_receive(:call).with(String, "string").and_return "coerced string"
+
+        command = subject.new_command(:foo, "string")
+
+        command.params.should be == ["coerced string"]
+      end
+
+      it "passes only given params through coercer, even if less than signature length", bar_command: true do
+        value_coercer.should_receive(:call).with(String, "string").and_return "coerced string"
+
+        command = subject.new_command(:bar, "string")
+
         command.params.should be == ["coerced string"]
       end
     end
