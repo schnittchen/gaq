@@ -89,31 +89,46 @@ module Gaq
     def self.declare_language_on(instance)
       instance.knows_command(:set_account) do |desc|
         desc.name = "_setAccount"
-        desc.signature = [String]
+        desc.signature = [:String]
         desc.sort_slot = 0
       end
 
       instance.knows_command(:track_pageview) do |desc|
         desc.name = "_trackPageview"
-        desc.signature = [String]
+        desc.signature = [:String]
         desc.sort_slot = 1
       end
 
       instance.knows_command(:track_event) do |desc|
         desc.name = "_trackEvent"
-        desc.signature = [String, String, String, Integer, Boolean]
+        desc.signature = [:String, :String, :String, :Int, :Boolean]
       end
 
       instance.knows_command(:set_custom_var) do |desc|
         desc.name = "_setCustomVar"
-        desc.signature = [Integer, String, String, Integer]
+        desc.signature = [:Int, :String, :String, :Int]
         desc.sort_slot = 2
       end
     end
 
-    # @TODO
     def self.define_transformations_on(instance)
-      instance.value_coercer = ->(type, x) {x}
+      instance.value_coercer = method(:coerce_value)
+    end
+
+    def self.coerce_value(type, value)
+      case type
+      when :Boolean
+        !!value
+      when :String
+        String(value)
+      when :Int
+        Integer(value)
+      when :Number
+        raise "'Number' coercion not implemented"
+        # GA docs do not tell us what that means
+      else
+        raise "Unable to coerce unknown type #{type.inspect}"
+      end
     end
 
     def self.singleton

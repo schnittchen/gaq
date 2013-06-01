@@ -225,5 +225,43 @@ module Gaq
         command.tracker_name.should be == "my_tracker"
       end
     end
+
+    describe ".coerce_value" do
+      describe "type :Boolean" do
+        it "coerces boolish values properly" do
+          described_class.coerce_value(:Boolean, true).should be true
+          described_class.coerce_value(:Boolean, false).should be false
+
+          described_class.coerce_value(:Boolean, 1).should be true
+          described_class.coerce_value(:Boolean, nil).should be false
+        end
+      end
+
+      describe "type :String" do
+        it "coerces values like String()" do
+          described_class.coerce_value(:String, "str").should be == "str"
+          described_class.coerce_value(:String, 1).should be == "1"
+
+          expect {
+            described_class.coerce_value(:String, BasicObject.new)
+          }.to raise_exception
+        end
+      end
+
+      describe "type :Int" do
+        it "coerces values like Integer()" do
+          described_class.coerce_value(:Int, 1).should be 1
+          described_class.coerce_value(:Int, "5").should be 5
+
+          expect {
+            described_class.coerce_value(:Int, "_")
+          }.to raise_exception
+
+          expect {
+            described_class.coerce_value(:Int, "3.14")
+          }.to raise_exception
+        end
+      end
+    end
   end
 end
