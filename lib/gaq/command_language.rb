@@ -1,5 +1,3 @@
-require 'gaq/boolean'
-
 module Gaq
   class CommandLanguage
     attr_writer :value_coercer
