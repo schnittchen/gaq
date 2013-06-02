@@ -155,6 +155,25 @@ module Gaq
       end
     end
 
+    describe "tracker_names" do
+      it "initially is [nil]" do
+        subject.tracker_names.should be == [nil]
+      end
+
+      context "after gaq.additional_trackers = [:foo, :bar]" do
+        before do
+          rails.additional_trackers = [:foo, :bar]
+        end
+
+        it "contains nil, 'foo' and 'bar'" do
+          subject.tracker_names.should have(3).tracker_names
+          subject.tracker_names.should include(nil)
+          subject.tracker_names.should include('foo')
+          subject.tracker_names.should include('bar')
+        end
+      end
+    end
+
     describe "#render_ga_js?" do
       let(:environment) do
         ActiveSupport::StringInquirer.new(example.metadata[:env].to_s)

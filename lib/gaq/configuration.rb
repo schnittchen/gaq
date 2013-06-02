@@ -78,6 +78,10 @@ module Gaq
       @tracker_configs[name]
     end
 
+    def tracker_names
+      @tracker_configs.keys
+    end
+
     def render_ga_js?(environment)
       environment = environment.to_s
 
