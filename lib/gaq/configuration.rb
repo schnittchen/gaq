@@ -96,6 +96,7 @@ module Gaq
 
       RAILS_CONFIG_ACCESSORS = [:web_property_id, :track_pageview]
       attr_accessor(*RAILS_CONFIG_ACCESSORS)
+      alias_method :track_pageview?, :track_pageview
 
       def initialize(tracker_name)
         @tracker_name = tracker_name

@@ -79,7 +79,6 @@ module Gaq
           end
 
           it "does not render _trackPageview for default tracker" do
-            pending
             result.should be == [
               ["_setAccount", "UA-XUNSET-S"]
             ]
