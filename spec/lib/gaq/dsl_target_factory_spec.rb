@@ -88,6 +88,13 @@ module Gaq
         subject.root_target.factory_token
       end
 
+      describe "#target_with_tracker_name" do
+        it "tolerates both strings and symbols as tracker names" do
+          subject.target_with_tracker_name("tracker name", root_token).tracker_name.should be ==
+            subject.target_with_tracker_name(:"tracker name", root_token).tracker_name
+        end
+      end
+
       describe "#target_with_tracker_name (token is root token)", immediate_commands: true, custom_tracker: true do
         let(:target) { subject.target_with_tracker_name("tracker name", root_token) }
 

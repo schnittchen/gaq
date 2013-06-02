@@ -18,6 +18,7 @@ module Gaq
     end
 
     def target_with_tracker_name(tracker_name, token)
+      tracker_name = tracker_name.to_s unless tracker_name.nil?
       token = token.dup
       token.tracker_name = tracker_name
       target_for_token(token)
