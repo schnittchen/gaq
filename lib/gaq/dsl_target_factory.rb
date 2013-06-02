@@ -5,12 +5,13 @@ module Gaq
   class DslTargetFactory
     attr_writer :target_base_class #for injecting
 
-    def initialize(class_cache, flash_commands_adapter, immediate_commands, new_command_proc, variables)
+    def initialize(class_cache, flash_commands_adapter, immediate_commands, new_command_proc, variables, tracker_names)
       @class_cache = class_cache
       @flash_commands_adapter = flash_commands_adapter
       @immediate_commands = immediate_commands
       @new_command_proc = new_command_proc
       @variables = variables
+      @tracker_names = tracker_names
     end
 
     def root_target
@@ -19,6 +20,8 @@ module Gaq
 
     def target_with_tracker_name(tracker_name, token)
       tracker_name = tracker_name.to_s unless tracker_name.nil?
+      raise "No tracker by name #{tracker_name.inspect}" unless @tracker_names.include?(tracker_name)
+
       token = token.dup
       token.tracker_name = tracker_name
       target_for_token(token)

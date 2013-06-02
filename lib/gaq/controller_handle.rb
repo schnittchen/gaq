@@ -60,7 +60,9 @@ module Gaq
     end
 
     def target_factory
-      @target_factory ||= DslTargetFactory.new(@class_cache, flash_commands_adapter, immediate_commands, new_command_proc, variables)
+      @target_factory ||= DslTargetFactory.new(
+        @class_cache, flash_commands_adapter, immediate_commands,
+        new_command_proc, variables, @config.tracker_names)
     end
 
     def flash_commands_adapter

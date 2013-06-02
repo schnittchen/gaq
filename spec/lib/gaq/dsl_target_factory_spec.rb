@@ -8,6 +8,7 @@ module Gaq
     let(:immediate_commands) { Object.new }
     let(:new_command_proc) { Object.new }
     let(:variables) { Object.new }
+    let(:tracker_names) { ["tracker name", "foo"] }
 
     let(:class_cache) do
       ClassCache.new
@@ -38,7 +39,7 @@ module Gaq
     end
 
     subject do
-      result = described_class.new(class_cache, flash_commands_adapter, immediate_commands, new_command_proc, variables)
+      result = described_class.new(class_cache, flash_commands_adapter, immediate_commands, new_command_proc, variables, tracker_names)
       result.target_base_class = target_base_class
       result
     end
@@ -86,6 +87,14 @@ module Gaq
 
       let(:root_token) do
         subject.root_target.factory_token
+      end
+
+      describe "#target_with_tracker_name (unregistered name)" do
+        it "complains about the unknown name" do
+          expect {
+            subject.target_with_tracker_name("bogus", root_token)
+          }.to raise_exception
+        end
       end
 
       describe "#target_with_tracker_name" do
