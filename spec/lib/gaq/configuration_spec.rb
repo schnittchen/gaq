@@ -93,7 +93,7 @@ module Gaq
 
       def find_tracker_config_by_name(name)
         name = name.to_s unless name.nil?
-        result = subject.tracker_configs.find { |c| c.tracker_name == name }
+        result = subject.tracker_config(name)
         result.should_not be_nil
         result
       end
@@ -134,6 +134,24 @@ module Gaq
         default_tracker_config = find_tracker_config_by_name(nil)
 
         default_tracker_config.web_property_id.should be == "bla"
+      end
+    end
+
+    describe "tracker_config" do
+      it "returns nil when no tracker config by given name" do
+        subject.tracker_config('bogus').should be_nil
+      end
+
+      it "returns a different object per tracker name" do
+        rails.additional_trackers = [:foo, :bar]
+
+        subject.tracker_config('foo').should_not be subject.tracker_config('bar')
+      end
+
+      it "only accepts tracker names as strings" do
+        rails.additional_trackers = [:foo, :bar]
+
+        subject.tracker_config(:foo).should be_nil
       end
     end
 

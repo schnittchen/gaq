@@ -74,8 +74,8 @@ module Gaq
       tracker_config.rails_config
     end
 
-    def tracker_configs
-      @tracker_configs.values
+    def tracker_config(name)
+      @tracker_configs[name]
     end
 
     def render_ga_js?(environment)
