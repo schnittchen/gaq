@@ -328,21 +328,46 @@ module Gaq
       end
 
       context "with a custom tracker" do
-        before(:each) do
+        before do
           rails_config.additional_trackers = ["foo"]
-          root_target["foo"].track_event 'category', 'action', 'label'
         end
 
-        it "maybe does not render _setAccount for additional tracker under some circumstances"
-
-        it "renders _trackPageview and _trackEvent for that tracker" do
+        it "does not render a _setAccount for the additional tracker" do
           result.should be == [
             ["_setAccount", "UA-XUNSET-S"],
-            ["foo._setAccount", "UA-XUNSET-S"],
-            ["_trackPageview"],
-            ["foo._trackPageview"],
-            ["foo._trackEvent", "category", "action", "label"]
+            ["_trackPageview"]
           ]
+        end
+
+        context "after gaq[:foo].track_event 'category', 'action', 'label'" do
+          before do
+            root_target["foo"].track_event 'category', 'action', 'label'
+          end
+
+          it "renders _setAccount, _trackPageview and _trackEvent for that tracker" do
+            result.should be == [
+              ["_setAccount", "UA-XUNSET-S"],
+              ["foo._setAccount", "UA-XUNSET-S"],
+              ["_trackPageview"],
+              ["foo._trackPageview"],
+              ["foo._trackEvent", "category", "action", "label"]
+            ]
+          end
+
+          context "with config.gaq.tracker(:foo).track_pageview = false" do
+            before do
+              rails_config.tracker(:foo).track_pageview = false
+            end
+
+            it "does not render _trackPageview, but _setAccount and _trackEvent for that tracker" do
+              result.should be == [
+                ["_setAccount", "UA-XUNSET-S"],
+                ["foo._setAccount", "UA-XUNSET-S"],
+                ["_trackPageview"],
+                ["foo._trackEvent", "category", "action", "label"]
+              ]
+            end
+          end
         end
       end
 
