@@ -371,7 +371,11 @@ module Gaq
         end
       end
 
-      it "fails when an undeclared tracker is accessed"
+      it "fails when an undeclared tracker is accessed from a target like gaq[:bogus]" do
+        expect {
+          root_target[:bogus]
+        }.to raise_exception
+      end
     end
   end
 end
