@@ -1,11 +1,13 @@
 # encoding: utf-8
 
-# require 'gaq/class_cache' #why?
 require 'gaq/dsl_target_factory'
 require 'gaq/flash_commands_adapter'
+require 'gaq/interprets_config'
 
 module Gaq
   class ControllerHandle
+    include InterpretsConfig
+
     attr_writer :flash_commands_adapter
 
     def initialize(controller_facade, language, class_cache, config)
@@ -37,6 +39,10 @@ module Gaq
 
     private
 
+    def interpret_config(value)
+      super(value, @controller_facade)
+    end
+
     def seen_tracker_names
       immediate_commands.map(&:tracker_name).uniq
     end
@@ -54,7 +60,8 @@ module Gaq
     end
 
     def set_account_command(tracker_config)
-      command = @language.new_command(:set_account, tracker_config.web_property_id)
+      web_property_id = interpret_config(tracker_config.web_property_id)
+      command = @language.new_command(:set_account, web_property_id)
       command.tracker_name = tracker_config.tracker_name
       command
     end

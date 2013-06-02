@@ -33,6 +33,6 @@ Dummy::Application.configure do
   # Print deprecation notices to the stderr
   config.active_support.deprecation = :stderr
 
-  config.gaq.web_property_id = 'UA-TESTDYNA-1'
+  config.gaq.web_property_id = ->(c) { c.params[:wpi] || 'UA-TESTDYNA-1' }
   config.gaq.render_ga_js = true
 end
