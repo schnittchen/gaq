@@ -31,7 +31,7 @@ module Gaq
         rendered
       end
 
-      it "foo" do
+      it "renders commands segments" do
         config.stub(:render_ga_js?) { false }
 
         commands_as_segments = [
