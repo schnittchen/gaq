@@ -25,6 +25,7 @@ module Gaq
 
     def finalized_commands_as_segments
       commands = immediate_commands.dup
+      commands << @language.new_command(:anonymize_ip) if interpret_config(@config.anonymize_ip)
 
       setup_tracker_names = [nil, *seen_tracker_names].uniq
       setup_tracker_names.each do |tracker_name|

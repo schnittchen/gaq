@@ -72,6 +72,20 @@ module Gaq
         end
       end
 
+      context "with config.gaq.anonymize_ip = true" do
+        before do
+          rails_config.anonymize_ip = true
+        end
+
+        it "renders '_gat._anonymizeIp" do
+          result.should be == [
+            ["_setAccount", "UA-XUNSET-S"],
+            ["_gat._anonymizeIp"],
+            ["_trackPageview"]
+          ]
+        end
+      end
+
       context "configuring default tracker" do
         context "config.gaq.track_pageview = false" do
           before do

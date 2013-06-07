@@ -34,5 +34,6 @@ Dummy::Application.configure do
   config.active_support.deprecation = :stderr
 
   config.gaq.web_property_id = ->(c) { c.params[:wpi] || 'UA-TESTDYNA-1' }
+  config.gaq.anonymize_ip = ->(c) { c.params[:anonymize_ip] == 'true' }
   config.gaq.render_ga_js = true
 end

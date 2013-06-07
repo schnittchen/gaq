@@ -94,7 +94,7 @@ module Gaq
       instance.knows_command(:track_pageview) do |desc|
         desc.name = "_trackPageview"
         desc.signature = [:String]
-        desc.sort_slot = 1
+        desc.sort_slot = 2
       end
 
       instance.knows_command(:track_event) do |desc|
@@ -105,7 +105,13 @@ module Gaq
       instance.knows_command(:set_custom_var) do |desc|
         desc.name = "_setCustomVar"
         desc.signature = [:Int, :String, :String, :Int]
-        desc.sort_slot = 2
+        desc.sort_slot = 3
+      end
+
+      instance.knows_command(:anonymize_ip) do |desc|
+        desc.name = "_gat._anonymizeIp"
+        desc.signature = []
+        desc.sort_slot = 1
       end
     end
 
