@@ -22,13 +22,13 @@ module Gaq
     end
 
     describe "#render" do
-      def pushed_jsons(rendered)
+      def pushed_arrays(rendered)
         rendered = rendered.lines.drop_while { |line| !/^\s*_gaq.push/.match(line) }
         rendered = rendered.take_while { |line| !line.empty? }
 
-        rendered = /\A\_gaq.push\((.*)\);\Z/m.match(rendered.join(''))[1]
+        rendered = rendered.join('')[/\A\_gaq.push\((.*)\);\Z/m, 1]
         rendered = rendered.split(/,\n\s*/)
-        rendered
+        rendered.map { |string| JSON.parse(string) }
       end
 
       it "renders commands segments" do
@@ -38,12 +38,9 @@ module Gaq
           ["foo", "bar"],
           ["baz", true, 3]
         ]
-        result = subject.render(commands_as_segments)
+        rendered = subject.render(commands_as_segments)
 
-        pushed_jsons(result).should be == [
-          '["foo", "bar"]',
-          '["baz", true, 3]'
-        ]
+        pushed_arrays(rendered).should be == commands_as_segments
       end
 
       describe "snippet rendering" do

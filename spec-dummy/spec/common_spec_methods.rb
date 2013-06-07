@@ -40,21 +40,12 @@ module Helpers
   end
 
   def gaq_pushed_instructions
-    # we cannot use JSON.parse here because I was so stupid to use "'" as string delimiter
     lines = %r{\A_gaq.push\((.*)\);\Z}m.match(gaq_js_instructions.second)[1]
     lines.split(",\n").map do |instruction_line|
       instruction_line.should start_with('[')
       instruction_line.should end_with(']')
-      instruction_line[1..-2].split(/,\s*/).map do |segment|
-        if segment[0] == "'"
-          segment.should start_with("'")
-          segment.should end_with("'")
-        else
-          segment.should start_with('"')
-          segment.should end_with('"')
-        end
-        segment[1..-2]
-      end
+
+      JSON.parse(instruction_line)
     end
   end
 

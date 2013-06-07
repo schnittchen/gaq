@@ -33,12 +33,8 @@ EOJ
 
     def escape_instructions(commands_as_segments)
       commands_as_segments.map do |command_as_segments|
-        escape_instruction(command_as_segments)
+        command_as_segments.to_json
       end
-    end
-
-    def escape_instruction(command_as_segments)
-      "[#{command_as_segments.map(&:to_json).join(', ')}]"
     end
 
     def render_ga_js?
