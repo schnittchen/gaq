@@ -4,7 +4,7 @@ source 'https://rubygems.org'
 gemspec
 
 gem 'rails', '~> 3.1.0'
-gem 'rspec-rails', '~> 2.12.0'
+gem 'rspec-rails', '~> 2.13.2'
 
 gem 'capybara', '~> 2.0.0'
 gem 'terminal-notifier-guard'
