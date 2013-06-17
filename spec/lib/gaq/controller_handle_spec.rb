@@ -2,38 +2,98 @@ require 'gaq/controller_handle'
 require 'gaq/configuration'
 require 'gaq/class_cache'
 
+RSpec::Matchers.define :command_segments do
+  match do |segments|
+    next false unless segments.is_a?(Array) and segments.length >= 1
+    first_segment = segments.first
+    command, tracker = first_segment.split('.', 2).reverse
+
+    (!@first_segment || first_segment == @first_segment) &&
+      (!@tracker_name || tracker.to_s == @tracker_name)
+  end
+
+  chain :starting_with do |first_segment|
+    @first_segment = first_segment
+  end
+
+  chain :for_tracker do |tracker_name|
+    @tracker_name = tracker_name.to_s
+  end
+
+  chain :for_default_tracker do
+    @tracker_name = ''
+  end
+end
+
+describe "custom matcher" do
+  it "detects commands" do
+    [['foo']].should include(command_segments.starting_with('foo'))
+    [['foo']].should_not include(command_segments.starting_with('bar'))
+    [['tracker.foo']].should_not include(command_segments.starting_with('foo'))
+    [['tracker.foo']].should include(command_segments.starting_with('tracker.foo'))
+
+    [['foo']].should include(command_segments.for_default_tracker)
+    [['foo']].should_not include(command_segments.for_tracker('tracker'))
+    [['tracker.foo']].should include(command_segments.for_tracker('tracker'))
+    [['tracker.foo']].should_not include(command_segments.for_default_tracker)
+  end
+end
+
 module Gaq
   describe ControllerHandle do
     describe "#finalized_commands_as_segments" do
-      let(:controller_facade) { double "controller facade" }
+      # This is more like an integration test. Many things are stubbed by real representatives,
+      # e.g. a real CommandLanguage object (because that's easier).
+      # The purpose of these examples is to assert what commands are rendered and what are
+      # placed in the flash, under different circumstances, namely,
+      # configurations and relevant data initially found in flash.
 
-      let(:language) do
+      # Assertions are made against
+      # * #finalized_commands_as_segments results (see let(:result)) and
+      # * commands_pushed_to_flash
+      # Initial flash input is placed in
+      # * commands_from_flash
+      # For test convenience, all three use the same format, namely an array of commands
+      # represented as command segments. The language is used for the necessary conversion.
+      # Emptiness of commands_pushed_to_flash is automatically asserted unless the
+      # push_to_flash: true metadata is present.
+
+      # The result array is implicitly checked to comply to certain ordering assumptions (fex.
+      # a tracker must be initialized with _setAccount before anything else is done with it).
+      # See let(:result) for details.
+
+      let(:stubbed_controller_facade) { double "controller facade" }
+
+      let(:stubbed_language) do
+        # we use the actual implementation, given that this spec is at the highest level of all
         result = CommandLanguage.new
         CommandLanguage.declare_language_on(result)
         CommandLanguage.define_transformations_on(result)
         result
       end
 
-      let(:config) do
+      let(:stubbed_configuration) do
         Configuration.new
       end
-      let(:rails_config) { config.rails_config }
+
+      # convenience. think "config.gaq", so rails_config.track_event would be config.gaq.track_event in the real world
+      let(:rails_config) { stubbed_configuration.rails_config }
 
       let(:commands_from_flash) { [] }
       let(:commands_pushed_to_flash) { [] }
 
-      let(:flash_commands_adapter) do
+      let(:stubbed_flash_commands_adapter) do
         result = double("flash_commands_adapter")
 
         # for test convenience, convert between plain "segments" arrays and proper command objects
         # this depends on features from language
 
         result.stub(:commands_from_flash) do
-          language.commands_from_flash_items(commands_from_flash)
+          stubbed_language.commands_from_flash_items(commands_from_flash)
         end
 
         result.stub(:<<) do |item|
-          item = language.commands_to_flash_items([item]).first
+          item = stubbed_language.commands_to_flash_items([item]).first
           commands_pushed_to_flash << item
         end
 
@@ -41,18 +101,140 @@ module Gaq
       end
 
       after do
+        # automatically assert that nothing got pushed to flash storage unless metadata tagged
         commands_pushed_to_flash.should be_empty \
           unless example.metadata[:push_to_flash]
       end
 
       subject do
-        described_class.new(controller_facade, language, ClassCache.new, config).tap do |result|
-          result.flash_commands_adapter = flash_commands_adapter
+        described_class.new(stubbed_controller_facade, stubbed_language, ClassCache.new, stubbed_configuration).tap do |result|
+          result.flash_commands_adapter = stubbed_flash_commands_adapter
         end
       end
 
       let(:result) do
         subject.finalized_commands_as_segments
+      end
+
+      let(:order_asserter_class) do
+        # We need to do a bunch of assertions that are hard to express in rspec proper.
+        # This class does the heavy lifting. It is tested below!
+        Class.new do
+          def initialize(result, context)
+            @result = result
+            @context = context
+          end
+
+          def do_the_assertions
+            ## overall order assumptions
+
+            # renders _gat._anonymizeIp before any _trackPageview, _setCustomVar or _trackEvent"
+            any_occurrence_of('_anonymizeIp').should \
+              precede(any_occurrence_of('_trackPageview'))
+            any_occurrence_of('_anonymizeIp').should \
+              precede(any_occurrence_of('_setCustomVar'))
+            any_occurrence_of('_anonymizeIp').should \
+              precede(any_occurrence_of('_trackEvent'))
+
+            ## per tracker order assumptions
+
+            # it rendes _setAccount before _trackPageview, _setCustomVar or _trackEvent
+            tracker_occurrences_of('_setAccount').should \
+              precede(tracker_occurrences_of('_trackPageview'))
+            tracker_occurrences_of('_setAccount').should \
+              precede(tracker_occurrences_of('_setCustomVar'))
+            tracker_occurrences_of('_setAccount').should \
+              precede(tracker_occurrences_of('_trackEvent'))
+
+            # it renders _setCustomVar before _trackEvent
+            tracker_occurrences_of('_setCustomVar').should \
+              precede(tracker_occurrences_of('_trackEvent'))
+          end
+
+          def self_test
+            @result = [
+              ['cmd1'], ['cmd2'], ['tracker.cmd1'], ['tracker.cmd2'],
+              ['cmd3'], ['cmd4'], ['tracker.cmd5']
+            ]
+
+            tracker_occurrences_of('cmd1').should \
+              precede(tracker_occurrences_of('cmd2'))
+
+            tracker_occurrences_of('cmd2').should_not \
+              precede(tracker_occurrences_of('cmd1'))
+
+            any_occurrence_of('cmd3').should \
+              precede(any_occurrence_of('cmd4'))
+
+            any_occurrence_of('cmd4').should_not \
+              precede(any_occurrence_of('cmd3'))
+
+            any_occurrence_of('cmd3').should \
+              precede(any_occurrence_of('cmd5'))
+
+            any_occurrence_of('cmd5').should_not \
+              precede(any_occurrence_of('cmd3'))
+          end
+
+          private
+
+          def precede(following)
+            @context.satisfy do |preceding|
+              preceding.all? do |tracker_name, indices|
+                following_indices = following[tracker_name]
+                [*indices, -1].max < [*following_indices, 2**31].min
+              end
+            end
+          end
+
+          def tracker_occurrences_of(command_name)
+            command_occurrences_with_matching_tracker_name(command_name) do |tracker_name|
+              tracker_name != :any
+            end
+            # preprocessed_result[command_name].select { |tracker_name, _| tracker_name != :any }
+          end
+
+          def any_occurrence_of(command_name)
+            command_occurrences_with_matching_tracker_name(command_name) do |tracker_name|
+              tracker_name == :any
+            end
+            # preprocessed_result[command_name].select { |tracker_name, _| tracker_name == :any }
+          end
+
+          def command_occurrences_with_matching_tracker_name(command_name)
+            analyzed_result[command_name].select { |tracker_name, _| yield tracker_name }
+          end
+
+          def analyzed_result
+            ar = Hash.new do |hash, command_name|
+              hash[command_name] = Hash.new { |hash, tracker_name| hash[tracker_name] = [] }
+            end
+
+            @result.map(&:first).each_with_index do |first_segment, index|
+              command_name, tracker_name = first_segment.split('.', 2).reverse
+
+              per_command = ar[command_name]
+              per_command[tracker_name] << index
+              per_command[:any] << index
+            end
+
+            ar
+          end
+        end
+      end
+
+      describe "order asserter mechanism" do
+        # the order_asserter_class does heavy lifting and deserves being tested!
+
+        it "does what we expect" do
+          order_asserter_class.new(nil, self).self_test
+        end
+      end
+
+      after do
+        # automatically assert order assumptions for each example
+        order_asserter_class.new(result, self).do_the_assertions
+        # this way we don't forget.
       end
 
       let(:root_target) { subject.root_target }
@@ -65,10 +247,9 @@ module Gaq
 
       context "without further configuration" do
         it "returns _setAccount (unset wpi) and _trackPageview for default tracker" do
-          result.should be == [
-            ["_setAccount", "UA-XUNSET-S"],
-            ["_trackPageview"]
-          ]
+          result.should have(2).items
+          result.should include(["_setAccount", "UA-XUNSET-S"])
+          result.should include(["_trackPageview"])
         end
       end
 
@@ -78,82 +259,85 @@ module Gaq
         end
 
         it "renders '_gat._anonymizeIp" do
-          result.should be == [
-            ["_setAccount", "UA-XUNSET-S"],
-            ["_gat._anonymizeIp"],
-            ["_trackPageview"]
-          ]
+          result.should include(["_gat._anonymizeIp"])
         end
       end
 
-      context "configuring default tracker" do
+      describe "default tracker configuration effect" do
+        before do
+          rails_config.web_property_id = 'UA-TEST23-5'
+        end
+
+        it "renders a correct _setAccount" do
+          result.should include(["_setAccount", 'UA-TEST23-5'])
+        end
+
+        it "renders a _trackPageview by default" do
+          result.should include(["_trackPageview"])
+        end
+
         context "config.gaq.track_pageview = false" do
           before do
             rails_config.track_pageview = false
           end
 
-          it "does not render _trackPageview for default tracker" do
-            result.should be == [
-              ["_setAccount", "UA-XUNSET-S"]
-            ]
-          end
-        end
-
-        context "config.gaq.web_property_id=" do
-          before do
-            rails_config.web_property_id = 'UA-TEST23-5'
+          it "does not render anything for default tracker", pending: true do
+            result.should_not include command_segments.for_default_tracker
           end
 
-          it "renders _setAccount with the given id" do
-            result.should be == [
-              ["_setAccount", 'UA-TEST23-5'],
-              ["_trackPageview"]
-            ]
+          context "with a tracker command" do
+            before do
+              # this is really an arbitrary tracker command.
+              root_target.track_event 'category', 'action', 'label'
+            end
+
+            it "renders the _setAccount, but not a _trackPageview" do
+              result.should include(["_setAccount", 'UA-TEST23-5'])
+              result.should_not include(command_segments.starting_with('_trackPageview'))
+            end
           end
         end
       end
 
-      context "with tracker commands issued on default tracker" do
-        context "gaq.track_event 'category', 'action', 'label'" do
+      describe "effect of tracker commands issued on default tracker" do
+        describe "gaq.track_event 'category', 'action', 'label'" do
           before do
             root_target.track_event 'category', 'action', 'label'
           end
 
           it "renders the _trackEvent" do
-            result.should be == [
-              ["_setAccount", "UA-XUNSET-S"],
-              ["_trackPageview"],
-              ["_trackEvent", "category", "action", "label"]
-            ]
+            result.should include(["_trackEvent", "category", "action", "label"])
           end
         end
+
+        # more here when implemented...
       end
 
-      context "with tracker commands issued on default tracker .next_request" do
+      describe "effect of tracker commands issued on default tracker .next_request" do
         context "gaq.next_request.track_event 'category', 'action', 'label'", push_to_flash: true do
           before do
             root_target.next_request.track_event 'category', 'action', 'label'
           end
 
-          it "renders the _trackEvent" do
-            result.should be == [
-              ["_setAccount", "UA-XUNSET-S"],
-              ["_trackPageview"]
-            ]
+          it "does not render the _trackEvent" do
+            result.should_not include command_segments.starting_with('_trackEvent')
+          end
 
+          it "pushes the _trackEvent to flash storage" do
             commands_pushed_to_flash.should be == [
               ["_trackEvent", "category", "action", "label"]
             ]
           end
         end
+
+        # more here when implemented...
       end
 
       context "with a variable declared", declare_var: true do
         it "returns nothing in addition" do
-          result.should be == [
-            ["_setAccount", "UA-XUNSET-S"],
-            ["_trackPageview"]
-          ]
+          result.should have(2).items
+          result.should include(["_setAccount", "UA-XUNSET-S"])
+          result.should include(["_trackPageview"])
         end
 
         context "after assigning to variable" do
@@ -162,11 +346,7 @@ module Gaq
           end
 
           it "renders the _setCustomVar" do
-            result.should be == [
-              ["_setAccount", "UA-XUNSET-S"],
-              ["_trackPageview"],
-              ["_setCustomVar", 0, "var", "blah", 3]
-            ]
+            result.should include(["_setCustomVar", 0, "var", "blah", 3])
           end
 
           context "gaq.track_event 'category', 'action', 'label'" do
@@ -174,54 +354,28 @@ module Gaq
               root_target.track_event 'category', 'action', 'label'
             end
 
-            it "renders the _setCustomVar before the _trackEvent" do
-              result.should be == [
-                ["_setAccount", "UA-XUNSET-S"],
-                ["_trackPageview"],
-                ["_setCustomVar", 0, "var", "blah", 3],
-                ["_trackEvent", "category", "action", "label"]
-              ]
+            it "renders the _trackEvent in addition, maintaining correct order" do
+              # order assertion is not here, see preamble.
+              result.should include(["_setCustomVar", 0, "var", "blah", 3])
+              result.should include(["_trackEvent", "category", "action", "label"])
             end
           end
+        end
 
-          context "gaq.next_request.track_event 'category', 'action', 'label'", push_to_flash: true do
-            before(:each) do
-              root_target.next_request.track_event 'category', 'action', 'label'
-            end
-
-            it "renders the _setCustomVar before the _trackEvent" do
-              result.should be == [
-                ["_setAccount", "UA-XUNSET-S"],
-                ["_trackPageview"],
-                ["_setCustomVar", 0, "var", "blah", 3],
-              ]
-
-              commands_pushed_to_flash.should be == [
-                ["_trackEvent", "category", "action", "label"]
-              ]
-            end
+        context "after assigning to variable on gaq.next_request", push_to_flash: true do
+          before do
+            root_target.next_request.var = "blah"
           end
 
-          context "both track_event and variable assignment on gaq.next_request", push_to_flash: true do
-            before(:each) do
-              root_target.next_request.track_event 'category', 'action', 'label'
-              root_target.next_request.var = "foo"
-            end
-
-            it "pushes the _setCustomVar and the _trackEvent onto the flash storage" do
-              result.should be == [
-                ["_setAccount", "UA-XUNSET-S"],
-                ["_trackPageview"],
-                ["_setCustomVar", 0, "var", "blah", 3],
-              ]
-
-              commands_pushed_to_flash.should be == [
-                ["_trackEvent", "category", "action", "label"],
-                ["_setCustomVar", 0, "var", "foo", 3],
-              ]
-            end
+          it "does not render a _setCustomVar" do
+            result.should_not include(command_segments.starting_with('_setCustomVar'))
           end
 
+          it "pushes the _setCustomVar onto the flash storage" do
+            commands_pushed_to_flash.should be == [
+              ["_setCustomVar", 0, "var", "blah", 3]
+            ]
+          end
         end
       end
 
@@ -232,28 +386,8 @@ module Gaq
         end
 
         it "renders these" do
-          result.should be == [
-            ["_setAccount", "UA-XUNSET-S"],
-            ["_trackPageview"],
-            ["_setCustomVar", 0, "var", "blah", 3],
-            ["_trackEvent", "last_cat", "last_action", "last_label"]
-          ]
-        end
-
-        context "gaq.track_event 'category', 'action', 'label'" do
-          before(:each) do
-            root_target.track_event 'category', 'action', 'label'
-          end
-
-          it "renders that in addition" do
-            result.should be == [
-              ["_setAccount", "UA-XUNSET-S"],
-              ["_trackPageview"],
-              ["_setCustomVar", 0, "var", "blah", 3],
-              ["_trackEvent", "last_cat", "last_action", "last_label"],
-              ["_trackEvent", "category", "action", "label"]
-            ]
-          end
+          result.should include(["_setCustomVar", 0, "var", "blah", 3])
+          result.should include(["_trackEvent", "last_cat", "last_action", "last_label"])
         end
 
         context "gaq.next_request.track_event 'category', 'action', 'label'", push_to_flash: true do
@@ -262,13 +396,10 @@ module Gaq
           end
 
           it "does not render that in addition" do
-            result.should be == [
-              ["_setAccount", "UA-XUNSET-S"],
-              ["_trackPageview"],
-              ["_setCustomVar", 0, "var", "blah", 3],
-              ["_trackEvent", "last_cat", "last_action", "last_label"],
-            ]
+            result.should_not include(["_trackEvent", "category", "action", "label"])
+          end
 
+          it "pushes that on the flash store instead" do
             commands_pushed_to_flash.should be == [
               ["_trackEvent", "category", "action", "label"]
             ]
@@ -276,65 +407,19 @@ module Gaq
         end
 
         context "with a variable declared", declare_var: true do
-          it "returns nothing in addition" do
-            result.should be == [
-              ["_setAccount", "UA-XUNSET-S"],
-              ["_trackPageview"],
-              ["_setCustomVar", 0, "var", "blah", 3],
-              ["_trackEvent", "last_cat", "last_action", "last_label"],
-            ]
-          end
-
-          context "after assigning to variable" do
+          context "after assigning to same variable again" do
             before do
               root_target.var = "blubb"
             end
 
             it "renders both _setCustomVar, in order" do
-              result.should be == [
-                ["_setAccount", "UA-XUNSET-S"],
-                ["_trackPageview"],
-                ["_setCustomVar", 0, "var", "blah", 3],
-                ["_setCustomVar", 0, "var", "blubb", 3],
-                ["_trackEvent", "last_cat", "last_action", "last_label"]
-              ]
-            end
+              first_set_custom_var = ["_setCustomVar", 0, "var", "blah", 3]
+              second_set_custom_var = ["_setCustomVar", 0, "var", "blubb", 3]
 
-            context "gaq.track_event 'category', 'action', 'label'" do
-              before do
-                root_target.track_event 'category', 'action', 'label'
-              end
-
-              it "renders the _trackEvent in addition" do
-                result.should be == [
-                  ["_setAccount", "UA-XUNSET-S"],
-                  ["_trackPageview"],
-                  ["_setCustomVar", 0, "var", "blah", 3],
-                  ["_setCustomVar", 0, "var", "blubb", 3],
-                  ["_trackEvent", "last_cat", "last_action", "last_label"],
-                  ["_trackEvent", "category", "action", "label"]
-                ]
-              end
-            end
-
-            context "gaq.next_request.track_event 'category', 'action', 'label'", push_to_flash: true do
-              before do
-                root_target.next_request.track_event 'category', 'action', 'label'
-              end
-
-              it "renders the _trackEvent in addition" do
-                result.should be == [
-                  ["_setAccount", "UA-XUNSET-S"],
-                  ["_trackPageview"],
-                  ["_setCustomVar", 0, "var", "blah", 3],
-                  ["_setCustomVar", 0, "var", "blubb", 3],
-                  ["_trackEvent", "last_cat", "last_action", "last_label"],
-                ]
-
-                commands_pushed_to_flash.should be == [
-                  ["_trackEvent", "category", "action", "label"]
-                ]
-              end
+              result.should include(first_set_custom_var)
+              result.should include(second_set_custom_var)
+              result.index(first_set_custom_var).should be <
+                result.index(second_set_custom_var)
             end
           end
 
@@ -347,10 +432,7 @@ module Gaq
         end
 
         it "does not render a _setAccount for the additional tracker" do
-          result.should be == [
-            ["_setAccount", "UA-XUNSET-S"],
-            ["_trackPageview"]
-          ]
+          result.should_not include(command_segments.for_tracker('foo'))
         end
 
         context "after gaq[:foo].track_event 'category', 'action', 'label'" do
@@ -359,13 +441,9 @@ module Gaq
           end
 
           it "renders _setAccount, _trackPageview and _trackEvent for that tracker" do
-            result.should be == [
-              ["_setAccount", "UA-XUNSET-S"],
-              ["foo._setAccount", "UA-XUNSET-S"],
-              ["_trackPageview"],
-              ["foo._trackPageview"],
-              ["foo._trackEvent", "category", "action", "label"]
-            ]
+            result.should include(["foo._setAccount", "UA-XUNSET-S"])
+            result.should include(["foo._trackPageview"])
+            result.should include(["foo._trackEvent", "category", "action", "label"])
           end
 
           context "with config.gaq.tracker(:foo).track_pageview = false" do
@@ -374,12 +452,7 @@ module Gaq
             end
 
             it "does not render _trackPageview, but _setAccount and _trackEvent for that tracker" do
-              result.should be == [
-                ["_setAccount", "UA-XUNSET-S"],
-                ["foo._setAccount", "UA-XUNSET-S"],
-                ["_trackPageview"],
-                ["foo._trackEvent", "category", "action", "label"]
-              ]
+              result.should include(["foo._trackEvent", "category", "action", "label"])
             end
           end
         end
