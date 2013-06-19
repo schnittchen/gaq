@@ -207,7 +207,7 @@ module Gaq
 
           def analyzed_result
             ar = Hash.new do |hash, command_name|
-              hash[command_name] = Hash.new { |hash, tracker_name| hash[tracker_name] = [] }
+              hash[command_name] = Hash.new { |h, tracker_name| h[tracker_name] = [] }
             end
 
             @result.map(&:first).each_with_index do |first_segment, index|
