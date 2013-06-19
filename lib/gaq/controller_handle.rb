@@ -30,8 +30,7 @@ module Gaq
       setup_tracker_names = [nil, *seen_tracker_names].uniq
       setup_tracker_names.each do |tracker_name|
         tracker_config = @config.tracker_config(tracker_name)
-        # nil check here!
-        commands += tracker_setup_commands(tracker_config)
+        commands += tracker_setup_commands(tracker_config) if tracker_config
       end
 
       @language.sort_commands(commands)

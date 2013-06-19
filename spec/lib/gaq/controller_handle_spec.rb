@@ -463,6 +463,16 @@ module Gaq
           root_target[:bogus]
         }.to raise_exception
       end
+
+      context "with commands stored in flash referencing a nonexistend tracker" do
+        before do
+          commands_from_flash << ["nonexistent._trackEvent", "last_cat", "last_action", "last_label"]
+        end
+
+        it "does not raise an exception" do
+          result
+        end
+      end
     end
   end
 end
