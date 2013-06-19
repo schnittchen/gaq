@@ -282,6 +282,10 @@ module Gaq
           end
 
           it "does not render anything for default tracker", pending: true do
+            # Currently, the default tracker _setAccount is always rendered.
+            # I'm undecided about that.
+            # If the implementation stays this way, I should assert
+            # _setAccount presence here instead.
             result.should_not include command_segments.for_default_tracker
           end
 
