@@ -24,7 +24,7 @@ Or install it yourself as:
     class MyApplication < Rails::Application
       config.gaq.web_property_id = 'UA-XXYOURID-1'
     end
-```
+	```
 
 2. Put this in your application layout:
 
@@ -38,13 +38,19 @@ Or install it yourself as:
 
 3. DONE!
 
-4. If you want to use custom variables, configure them like this:
+### More setup
 
-    ```ruby
-    class MyApplication < Rails::Application
-      config.gaq.declare_variable :user_gender, scope: :session, slot: 1
-    end
-    ```
+If you want to use custom variables, configure them like this:
+
+```ruby
+  config.gaq.declare_variable :user_gender, scope: :session, slot: 1
+```
+
+If you need the _anonymizeIp feature, enable it like this:
+
+```ruby
+  config.gaq.anonymize_ip = true
+```
 
 ## Usage in the controller
 
@@ -69,6 +75,10 @@ gaq.next_request.track_event 'category', 'action', 'label'
 
 This feature uses the flash for storing _gaq items between requests.
 
+## Supported tracker commands
+
+Currently, only _trackEvent and _setCustomVar is supported. However commands are easily added, so open a pull request!
+
 ## Contributing
 
 1. Fork it
@@ -82,11 +92,11 @@ This feature uses the flash for storing _gaq items between requests.
 Test dependencies are declared in the Gemfile.
 All specs are run from guard.
 
-#### Dummy app
+The most interesting part is the controller_handle_spec, it asserts what commands get rendered under which circumstances.
 
 There is a dummy rails application
 in `spec-dummy` for integration tests, which we need because gaq keeps state in
 the session. The integration specs are located inside of it.
 
 It has two test environments, `test_static` and `test_dynamic`. Specs tagged with
-`:static` will not be run under `test_dynamic` and vice versa.
+`:static` will not be run under `test_dynamic` and vice versa. The dynamic tests are for dynamic configuration items, which is an upcoming feature that lets you configure things dynamically in the context of the running controller.
