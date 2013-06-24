@@ -27,7 +27,7 @@ module Gaq
       commands = immediate_commands.dup
       commands << @language.new_command(:anonymize_ip) if interpret_config(@config.anonymize_ip)
 
-      setup_tracker_names = [nil, *seen_tracker_names].uniq
+      setup_tracker_names = [nil, *track_pageview_tracker_names, *seen_tracker_names].uniq
       setup_tracker_names.each do |tracker_name|
         tracker_config = @config.tracker_config(tracker_name)
         commands += tracker_setup_commands(tracker_config) if tracker_config
@@ -45,6 +45,12 @@ module Gaq
 
     def seen_tracker_names
       immediate_commands.map(&:tracker_name).uniq
+    end
+
+    def track_pageview_tracker_names
+      @config.tracker_names.select do |tracker_name|
+        @config.tracker_config(tracker_name).track_pageview?
+      end
     end
 
     def tracker_setup_commands(tracker_config)

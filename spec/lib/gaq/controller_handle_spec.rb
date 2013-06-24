@@ -435,8 +435,40 @@ module Gaq
           rails_config.additional_trackers = ["foo"]
         end
 
-        it "does not render a _setAccount for the additional tracker" do
-          result.should_not include(command_segments.for_tracker('foo'))
+        context "configured not to track pageviews" do
+          before do
+            rails_config.tracker(:foo).track_pageview = false
+          end
+
+          it "does not render any command for the additional tracker" do
+            result.should_not include(command_segments.for_tracker('foo'))
+          end
+
+          context "after gaq[:foo].track_event 'category', 'action', 'label'" do
+            before do
+              root_target["foo"].track_event 'category', 'action', 'label'
+            end
+
+            it "renders the proper _setAccount" do
+              result.should include(["foo._setAccount", "UA-XUNSET-S"])
+            end
+
+            it "does not render a _trackPageview for the tracker" do
+              result.should_not include(["foo._trackPageview"])
+            end
+
+            it "renders the _trackEvent" do
+              result.should include(["foo._trackEvent", "category", "action", "label"])
+            end
+          end
+        end
+
+        it "renders a _setAccount for the additional tracker" do
+          result.should include(['foo._setAccount', "UA-XUNSET-S"])
+        end
+
+        it "renders a _trackPageview for the tracker" do
+          result.should include(["foo._trackPageview"])
         end
 
         context "after gaq[:foo].track_event 'category', 'action', 'label'" do
@@ -444,20 +476,16 @@ module Gaq
             root_target["foo"].track_event 'category', 'action', 'label'
           end
 
-          it "renders _setAccount, _trackPageview and _trackEvent for that tracker" do
-            result.should include(["foo._setAccount", "UA-XUNSET-S"])
-            result.should include(["foo._trackPageview"])
-            result.should include(["foo._trackEvent", "category", "action", "label"])
+          it "renders a _setAccount for the additional tracker" do
+            result.should include(['foo._setAccount', "UA-XUNSET-S"])
           end
 
-          context "with config.gaq.tracker(:foo).track_pageview = false" do
-            before do
-              rails_config.tracker(:foo).track_pageview = false
-            end
+          it "renders a _trackPageview for the tracker" do
+            result.should include(["foo._trackPageview"])
+          end
 
-            it "does not render _trackPageview, but _setAccount and _trackEvent for that tracker" do
-              result.should include(["foo._trackEvent", "category", "action", "label"])
-            end
+          it "renders the _trackEvent" do
+            result.should include(["foo._trackEvent", "category", "action", "label"])
           end
         end
       end
