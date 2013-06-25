@@ -2,7 +2,10 @@ require 'rake'
 require 'bundler/gem_tasks'
 require 'rspec/core/rake_task'
 
-task "default" => "ci"
+require 'coveralls/rake/task'
+Coveralls::RakeTask.new
+
+task "default" => [:ci, 'coveralls:push']
 
 desc "Run all tests for CI"
 task "ci" => "spec"
