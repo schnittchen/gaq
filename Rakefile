@@ -17,7 +17,9 @@ namespace "spec" do
   task "all" => ["gaq", "static", "dynamic"]
 
   desc "Run gaq specs"
-  RSpec::Core::RakeTask.new("gaq")
+  RSpec::Core::RakeTask.new("gaq") do |t|
+    t.rspec_opts = "-r ./spec/coveralls_helper"
+  end
 
   desc "Run static specs"
   RSpec::Core::RakeTask.new("static") do |t|
