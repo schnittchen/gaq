@@ -174,6 +174,12 @@ module Gaq
       end
     end
 
+    describe "#render_ga_js" do
+      it "equals :production by default" do
+        subject.render_ga_js.should be :production
+      end
+    end
+
     describe "#render_ga_js?" do
       let(:environment) do
         ActiveSupport::StringInquirer.new(example.metadata[:env].to_s)
@@ -188,6 +194,20 @@ module Gaq
         it "works as expected", env: :development do
           environment.should be_development
           environment.should_not be_production
+        end
+      end
+
+      context "without using rails_config.render_ga_js=" do
+        it "returns true in production", env: :production do
+          result.should be == true
+        end
+
+        it "returns false in development", env: :development do
+          result.should be == false
+        end
+
+        it "returns false in test", env: :test do
+          result.should be == false
         end
       end
 

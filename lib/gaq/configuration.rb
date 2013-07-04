@@ -44,6 +44,8 @@ module Gaq
       @tracker_configs = { nil => default_tracker_config }
       @rails_config = RailsConfig.new(self, default_tracker_config)
       @variables = {}
+
+      self.render_ga_js = :production
     end
 
     def declare_variable(name, options = {})
