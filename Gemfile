@@ -17,3 +17,5 @@ gem 'debugger'
 gem 'nokogiri'
 
 gem 'coveralls', require: false
+
+gem 'rake'
