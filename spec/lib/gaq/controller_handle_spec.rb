@@ -281,20 +281,8 @@ module Gaq
             rails_config.track_pageview = false
           end
 
-          it "renders a correct _setAccount" do
-            result.should include(["_setAccount", 'UA-TEST23-5'])
-          end
-
-          context "with a tracker command" do
-            before do
-              # this is really an arbitrary tracker command.
-              root_target.track_event 'category', 'action', 'label'
-            end
-
-            it "renders the _setAccount, but not a _trackPageview" do
-              result.should include(["_setAccount", 'UA-TEST23-5'])
-              result.should_not include(command_segments.starting_with('_trackPageview'))
-            end
+          it "does not render a _trackPageview for the tracker" do
+            result.should_not include(["_trackPageview"])
           end
         end
       end
@@ -446,16 +434,6 @@ module Gaq
 
           it "does not render a _trackPageview for the tracker" do
             result.should_not include(["foo._trackPageview"])
-          end
-
-          context "after gaq[:foo].track_event 'category', 'action', 'label'" do
-            before do
-              root_target["foo"].track_event 'category', 'action', 'label'
-            end
-
-            it "renders the _trackEvent" do
-              result.should include(["foo._trackEvent", "category", "action", "label"])
-            end
           end
         end
 
