@@ -281,24 +281,8 @@ module Gaq
             rails_config.track_pageview = false
           end
 
-          it "does not render anything for default tracker", pending: true do
-            # Currently, the default tracker _setAccount is always rendered.
-            # I'm undecided about that.
-            # If the implementation stays this way, I should assert
-            # _setAccount presence here instead.
-            result.should_not include command_segments.for_default_tracker
-          end
-
-          context "with a tracker command" do
-            before do
-              # this is really an arbitrary tracker command.
-              root_target.track_event 'category', 'action', 'label'
-            end
-
-            it "renders the _setAccount, but not a _trackPageview" do
-              result.should include(["_setAccount", 'UA-TEST23-5'])
-              result.should_not include(command_segments.starting_with('_trackPageview'))
-            end
+          it "does not render a _trackPageview for the tracker" do
+            result.should_not include(["_trackPageview"])
           end
         end
       end
@@ -435,34 +419,6 @@ module Gaq
           rails_config.additional_trackers = ["foo"]
         end
 
-        context "configured not to track pageviews" do
-          before do
-            rails_config.tracker(:foo).track_pageview = false
-          end
-
-          it "does not render any command for the additional tracker" do
-            result.should_not include(command_segments.for_tracker('foo'))
-          end
-
-          context "after gaq[:foo].track_event 'category', 'action', 'label'" do
-            before do
-              root_target["foo"].track_event 'category', 'action', 'label'
-            end
-
-            it "renders the proper _setAccount" do
-              result.should include(["foo._setAccount", "UA-XUNSET-S"])
-            end
-
-            it "does not render a _trackPageview for the tracker" do
-              result.should_not include(["foo._trackPageview"])
-            end
-
-            it "renders the _trackEvent" do
-              result.should include(["foo._trackEvent", "category", "action", "label"])
-            end
-          end
-        end
-
         it "renders a _setAccount for the additional tracker" do
           result.should include(['foo._setAccount', "UA-XUNSET-S"])
         end
@@ -471,17 +427,19 @@ module Gaq
           result.should include(["foo._trackPageview"])
         end
 
+        context "configured not to track pageviews" do
+          before do
+            rails_config.tracker(:foo).track_pageview = false
+          end
+
+          it "does not render a _trackPageview for the tracker" do
+            result.should_not include(["foo._trackPageview"])
+          end
+        end
+
         context "after gaq[:foo].track_event 'category', 'action', 'label'" do
           before do
             root_target["foo"].track_event 'category', 'action', 'label'
-          end
-
-          it "renders a _setAccount for the additional tracker" do
-            result.should include(['foo._setAccount', "UA-XUNSET-S"])
-          end
-
-          it "renders a _trackPageview for the tracker" do
-            result.should include(["foo._trackPageview"])
           end
 
           it "renders the _trackEvent" do
