@@ -42,16 +42,6 @@ module Gaq
       super(value, @controller_facade)
     end
 
-    def seen_tracker_names
-      immediate_commands.map(&:tracker_name).uniq
-    end
-
-    def track_pageview_tracker_names
-      @config.tracker_names.select do |tracker_name|
-        @config.tracker_config(tracker_name).track_pageview?
-      end
-    end
-
     def tracker_setup_commands(tracker_config)
       [set_account_command(tracker_config), track_pageview_command(tracker_config)].compact
     end
