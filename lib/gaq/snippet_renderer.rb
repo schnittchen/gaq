@@ -11,6 +11,14 @@ module Gaq
 })();
 EOJ
 
+    SNIPPET_THAT_SUPPORTS_DISPLAY_ADS = <<EOJ
+(function() {
+  var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+  ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
+  (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(ga);
+})();
+EOJ
+
     def initialize(rendering_context, config, rails_env)
       @context = rendering_context
       @config = config
@@ -24,7 +32,11 @@ EOJ
       ]
 
       js_content = js_content_lines.join("\n")
-      js_content << "\n\n" << SNIPPET if render_ga_js?
+      if support_display_ads?
+       js_content << "\n\n" << SNIPPET_THAT_SUPPORTS_DISPLAY_ADS if render_ga_js?
+      else
+        js_content << "\n\n" << SNIPPET if render_ga_js?
+      end
 
       return @context.javascript_tag js_content
     end
@@ -39,6 +51,10 @@ EOJ
 
     def render_ga_js?
       @config.render_ga_js?(@rails_env)
+    end
+
+    def support_display_ads?
+      @config.support_display_ads
     end
   end
 end
