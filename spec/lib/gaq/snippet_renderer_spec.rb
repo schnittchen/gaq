@@ -32,6 +32,7 @@ module Gaq
       end
 
       it "renders commands segments" do
+        config.stub(:support_display_ads) { false }
         config.stub(:render_ga_js?) { false }
 
         commands_as_segments = [
@@ -46,11 +47,19 @@ module Gaq
       describe "snippet rendering" do
         it "renders the snippet when config.render_ga_js? returns true" do
           config.stub(:render_ga_js?) { true }
+          config.stub(:support_display_ads) { true }
+          subject.render([]).should include('stats.g.doubleclick.net')
+        end
+
+        it "renders the snippet when config.render_ga_js? returns true" do
+          config.stub(:render_ga_js?) { true }
+          config.stub(:support_display_ads) { false }
           subject.render([]).should include('google-analytics.com')
         end
 
         it "does not render the snippet when config.render_ga_js? returns false" do
           config.stub(:render_ga_js?) { false }
+          config.stub(:support_display_ads) { false }
           subject.render([]).should_not include('google-analytics.com')
         end
       end
