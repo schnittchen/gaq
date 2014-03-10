@@ -5,7 +5,7 @@ module Gaq
   class Configuration
     attr_reader :rails_config, :variables
 
-    RAILS_CONFIG_ACCESSORS = [:anonymize_ip, :render_ga_js]
+    RAILS_CONFIG_ACCESSORS = [:anonymize_ip, :render_ga_js, :support_display_ads]
     attr_accessor(*RAILS_CONFIG_ACCESSORS)
 
     VariableException = Class.new(RuntimeError)
@@ -100,7 +100,7 @@ module Gaq
     class TrackerConfig
       attr_reader :rails_config, :tracker_name
 
-      RAILS_CONFIG_ACCESSORS = [:web_property_id, :track_pageview]
+      RAILS_CONFIG_ACCESSORS = [:web_property_id, :track_pageview, :support_display_ads]
       attr_accessor(*RAILS_CONFIG_ACCESSORS)
       alias_method :track_pageview?, :track_pageview
 
@@ -108,6 +108,7 @@ module Gaq
         @tracker_name = tracker_name
 
         @track_pageview = true
+        @support_display_ads = false
         @rails_config = RailsConfig.new(self)
 
         @web_property_id = 'UA-XUNSET-S'
