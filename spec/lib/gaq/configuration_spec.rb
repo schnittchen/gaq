@@ -121,10 +121,12 @@ module Gaq
           rails_tracker = rails.tracker(:foo)
           rails_tracker.web_property_id = "web property id"
           rails_tracker.track_pageview = :production
+          rails_tracker.support_display_ads = true
 
           tracker_config = find_tracker_config_by_name(:foo)
           tracker_config.web_property_id.should be == "web property id"
           tracker_config.track_pageview.should be :production
+          tracker_config.support_display_ads.should be true
         end
       end
 
