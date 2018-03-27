@@ -1,3 +1,5 @@
+NO LONGER MAINTAINED
+
 # Gaq [![Code Climate](https://codeclimate.com/github/schnittchen/gaq.png)](https://codeclimate.com/github/schnittchen/gaq) [![Build Status](https://travis-ci.org/schnittchen/gaq.png)](https://travis-ci.org/schnittchen/gaq) [![Coverage Status](https://coveralls.io/repos/schnittchen/gaq/badge.png?branch=master)](https://coveralls.io/r/schnittchen/gaq?branch=master)
 
 Ever wanted to push a track event from a controller? Set a custom variable from model data? Now you can.
